@@ -5,5 +5,9 @@ from . import views
 app_name = "mailrelay"
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    path(
+        "admin_update_discord_channels",
+        views.admin_update_discord_channels,
+        name="admin_update_discord_channels",
+    ),
 ]

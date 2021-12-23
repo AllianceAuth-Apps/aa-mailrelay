@@ -20,6 +20,9 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 @shared_task
 def forward_new_mails():
     for config in RelayConfig.objects.filter(is_enabled=True):
+        if not config.channels.exists():
+            logger.warning("No channels configured for config %s", config)
+            continue
         chain(
             [
                 update_character_mailing_lists.si(

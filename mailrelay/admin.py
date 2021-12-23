@@ -1,16 +1,23 @@
 from django.conf import settings
 from django.contrib import admin
 from django.db.models.functions import Lower
+from django.utils.html import format_html
 
 from .models import DiscordChannel, RelayConfig
 
 
 @admin.register(RelayConfig)
 class RelayConfigAdmin(admin.ModelAdmin):
+    change_list_template = "admin/mailrelay/relayconfig/change_list.html"
     list_display = ("__str__", "character", "_channels", "is_enabled")
 
     def _channels(self, obj) -> str:
-        return list(obj.channels.order_by("name").values_list("name", flat=True))
+        channels = list(obj.channels.order_by("name").values_list("name", flat=True))
+        if not channels:
+            return format_html(
+                '<span style="color:red;"><b>Error: No channel configured</b></span>'
+            )
+        return channels
 
     actions = ["send_new_mails"]
 
