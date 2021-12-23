@@ -1,6 +1,4 @@
-from django.conf import settings
+from app_utils.django import clean_setting
 
-# put your app settings here
-
-
-MAILRELAY_SETTING_ONE = getattr(settings, "MAILRELAY_SETTING_ONE", None)
+MAILRELAY_OLDEST_MAIL_HOURS = clean_setting("MAILRELAY_OLDEST_MAIL_HOURS", 720)
+"""Oldest mail to be forwarded in hours."""

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .core import chunks_by_lines, eve_xml_to_discord_markup
+from ..core import chunks_by_lines, eve_xml_to_discord_markup
 
 
 class TestXmlToMarkup(TestCase):

@@ -1,16 +1,21 @@
+import datetime as dt
+
 import grpc
 from discordproxy.discord_api_pb2 import Embed, SendChannelMessageRequest
 from discordproxy.discord_api_pb2_grpc import DiscordApiStub
+from discordproxy.helpers import parse_error_details
 from memberaudit.models import Character, CharacterMail
 from multiselectfield import MultiSelectField
 
 from django.db import models
+from django.utils.timezone import now
 
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.datetime import DATETIME_FORMAT
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
+from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS
 from .core import chunks_by_lines, eve_xml_to_discord_markup
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -49,9 +54,8 @@ class RelayConfig(models.Model):
         return f"#{self.pk}"
 
     def send_new_mails(self):
-        new_mails = self.character.mails.exclude(
-            pk__in=self.mails_sent.values_list("pk", flat=True)
-        ).order_by("timestamp")[:3]
+        """Send all new mails to configured channels."""
+        new_mails = self._new_mails()
         if not new_mails.exists():
             logger.info("No new mails to forward.")
             return
@@ -88,11 +92,43 @@ class RelayConfig(models.Model):
                             timestamp=mail.timestamp.isoformat(),
                             title=title,
                         )
+                        content = self._content_with_mentions()
                         request = SendChannelMessageRequest(
-                            channel_id=channel.id, embed=embed
+                            content=content, channel_id=channel.id, embed=embed
                         )
-                        client.SendChannelMessage(request)
+                        try:
+                            client.SendChannelMessage(request)
+                        except grpc.RpcError as e:
+                            details = parse_error_details(e)
+                            logger.warning(
+                                "gRPC call failed. "
+                                "HTTP response code: %s\n"
+                                "JSON error code:%s\n"
+                                "Discord error message:%s",
+                                details.status,
+                                details.code,
+                                details.text,
+                            )
                 self.mails_sent.add(mail)
+
+    def _new_mails(self) -> models.QuerySet:
+        oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
+        self.mails_sent.filter(timestamp__lt=oldest_timestamp).delete()
+        new_mails_qs = (
+            self.character.mails.exclude(
+                pk__in=self.mails_sent.values_list("pk", flat=True)
+            )
+            .filter(timestamp__gte=oldest_timestamp)
+            .order_by("timestamp")[:3]
+        )
+        return new_mails_qs
+
+    def _content_with_mentions(self) -> str:
+        if self.ping_type is self.ChannelPingType.EVERYBODY:
+            return "@everybody"
+        if self.ping_type is self.ChannelPingType.HERE:
+            return "@here"
+        return ""
 
 
 class DiscordChannel(models.Model):
