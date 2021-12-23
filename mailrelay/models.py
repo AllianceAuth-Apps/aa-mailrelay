@@ -16,6 +16,7 @@ from app_utils.logging import LoggerAddTag
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS
 from .core import chunks_by_lines, eve_xml_to_discord_markup
+from .managers import DiscordChannelManager
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -153,6 +154,8 @@ class DiscordChannel(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
     last_update_at = models.DateTimeField(auto_now=True)
+
+    objects = DiscordChannelManager()
 
     def __str__(self) -> str:
         return str(self.name)
