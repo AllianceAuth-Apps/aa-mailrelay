@@ -82,38 +82,12 @@ class RelayConfig(models.Model):
                 )
                 full_description += eve_xml_to_discord_markup(mail.body)
                 for channel in self.channels.all():
-                    description_chunks = chunks_by_lines(full_description, 3500)
-                    chunks_count = len(description_chunks)
-                    for num, description_chunk in enumerate(
-                        description_chunks, start=1
-                    ):
-                        footer_text = (
-                            f"{num}/{chunks_count}" if chunks_count > 1 else ""
-                        )
-                        title = mail.subject if num == 1 else ""
-                        embed = Embed(
-                            footer=Embed.Footer(text=footer_text),
-                            description=description_chunk,
-                            timestamp=mail.timestamp.isoformat(),
-                            title=title,
-                        )
-                        content = self._content_with_mentions()
-                        request = SendChannelMessageRequest(
-                            content=content, channel_id=channel.id, embed=embed
-                        )
-                        try:
-                            client.SendChannelMessage(request)
-                        except grpc.RpcError as e:
-                            details = parse_error_details(e)
-                            logger.warning(
-                                "gRPC call failed. "
-                                "HTTP response code: %s\n"
-                                "JSON error code:%s\n"
-                                "Discord error message:%s",
-                                details.status,
-                                details.code,
-                                details.text,
-                            )
+                    self._send_message_to_discord(
+                        client=client,
+                        mail=mail,
+                        channel=channel,
+                        full_description=full_description,
+                    )
                 self.mails_sent.add(mail)
 
     def new_mails_queryset(self) -> models.QuerySet:
@@ -137,15 +111,35 @@ class RelayConfig(models.Model):
             raise NotImplementedError("Unknown mail category")
         return new_mails_qs
 
-    def is_alliance_mail(self, mail: CharacterMail) -> bool:
-        alliance_id = mail.character.character_ownership.character.alliance_id
-        if not alliance_id:
-            return False
-        return mail.recipients.filter(id=alliance_id).exists()
-
-    def is_corporation_mail(self, mail: CharacterMail) -> bool:
-        corporation_id = mail.character.character_ownership.character.corporation_id
-        return mail.recipients.filter(id=corporation_id).exists()
+    def _send_message_to_discord(self, client, mail, channel, full_description):
+        description_chunks = chunks_by_lines(full_description, 3500)
+        chunks_count = len(description_chunks)
+        for num, description_chunk in enumerate(description_chunks, start=1):
+            footer_text = f"{num}/{chunks_count}" if chunks_count > 1 else ""
+            title = mail.subject if num == 1 else ""
+            embed = Embed(
+                footer=Embed.Footer(text=footer_text),
+                description=description_chunk,
+                timestamp=mail.timestamp.isoformat(),
+                title=title,
+            )
+            content = self._content_with_mentions()
+            request = SendChannelMessageRequest(
+                content=content, channel_id=channel.id, embed=embed
+            )
+            try:
+                client.SendChannelMessage(request)
+            except grpc.RpcError as e:
+                details = parse_error_details(e)
+                logger.warning(
+                    "gRPC call failed. "
+                    "HTTP response code: %s\n"
+                    "JSON error code:%s\n"
+                    "Discord error message:%s",
+                    details.status,
+                    details.code,
+                    details.text,
+                )
 
     def _content_with_mentions(self) -> str:
         if self.ping_type is self.ChannelPingType.EVERYBODY:
