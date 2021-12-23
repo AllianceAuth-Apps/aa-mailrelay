@@ -40,6 +40,10 @@ setup(
     python_requires="~=3.7",
     install_requires=[
         "allianceauth>=2.9",
+        "aa-memberaudit",
+        "discordproxy",
+        "allianceauth-app-utils",
+        "django-eveuniverse",
         "django-multiselectfield",
     ],
 )
