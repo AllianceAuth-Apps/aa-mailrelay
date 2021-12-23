@@ -40,5 +40,7 @@ def forward_new_mails():
 
 @shared_task
 def forward_new_mails_for_config(config_pk):
-    config = RelayConfig.objects.select_related("character").get(pk=config_pk)
+    config = RelayConfig.objects.select_related(
+        "character", "character__character_ownership__character"
+    ).get(pk=config_pk)
     config.send_new_mails()

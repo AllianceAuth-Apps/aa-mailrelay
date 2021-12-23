@@ -5,7 +5,6 @@ from discordproxy.discord_api_pb2 import Embed, SendChannelMessageRequest
 from discordproxy.discord_api_pb2_grpc import DiscordApiStub
 from discordproxy.helpers import parse_error_details
 from memberaudit.models import Character, CharacterMail
-from multiselectfield import MultiSelectField
 
 from django.db import models
 from django.utils.timezone import now
@@ -28,8 +27,8 @@ class RelayConfig(models.Model):
         EVERYBODY = "PE", "@everybody"
 
     class MailCategory(models.TextChoices):
-        ALLIANCE = "AL", "alliance"
-        CORPORATION = "CP", "corporation"
+        ALLIANCE = "AL", "Alliance mails"
+        CORPORATION = "CP", "Corporation mails"
 
     character = models.ForeignKey(Character, on_delete=models.CASCADE)
     channels = models.ManyToManyField("DiscordChannel")
@@ -37,7 +36,8 @@ class RelayConfig(models.Model):
         default=True,
         help_text="toogle for activating or deactivating relaying mail",
     )
-    notification_types = MultiSelectField(
+    mail_category = models.CharField(
+        max_length=2,
         choices=MailCategory.choices,
         help_text="Category of mails that you want to relay to Discord.",
     )
@@ -48,14 +48,19 @@ class RelayConfig(models.Model):
         verbose_name="channel pings",
         help_text="Option to ping every member of the channel",
     )
-    mails_sent = models.ManyToManyField(CharacterMail, related_name="+")
+    mails_sent = models.ManyToManyField(
+        CharacterMail,
+        related_name="+",
+        editable=False,
+        help_text="Latest mails that have already been sent",
+    )
 
     def __str__(self) -> str:
         return f"#{self.pk}"
 
     def send_new_mails(self):
         """Send all new mails to configured channels."""
-        new_mails = self._new_mails()
+        new_mails = self.new_mails_queryset()
         if not new_mails.exists():
             logger.info("No new mails to forward.")
             return
@@ -66,7 +71,7 @@ class RelayConfig(models.Model):
                 self.channels.count(),
             )
             client = DiscordApiStub(channel)
-            for mail in new_mails:
+            for mail in new_mails.order_by("timestamp"):
                 recipients = ", ".join(
                     [obj.name_plus for obj in mail.recipients.order_by("name")]
                 )
@@ -111,17 +116,36 @@ class RelayConfig(models.Model):
                             )
                 self.mails_sent.add(mail)
 
-    def _new_mails(self) -> models.QuerySet:
+    def new_mails_queryset(self) -> models.QuerySet:
         oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
         self.mails_sent.filter(timestamp__lt=oldest_timestamp).delete()
         new_mails_qs = (
-            self.character.mails.exclude(
-                pk__in=self.mails_sent.values_list("pk", flat=True)
-            )
+            self.character.mails.select_related("sender")
+            .exclude(pk__in=self.mails_sent.values_list("pk", flat=True))
             .filter(timestamp__gte=oldest_timestamp)
-            .order_by("timestamp")[:3]
         )
+        if self.mail_category == self.MailCategory.ALLIANCE:
+            alliance_id = self.character.character_ownership.character.alliance_id
+            if alliance_id:
+                new_mails_qs = new_mails_qs.filter(recipients__id=alliance_id)
+            else:
+                new_mails_qs = new_mails_qs.none()
+        elif self.mail_category == self.MailCategory.CORPORATION:
+            corporation_id = self.character.character_ownership.character.corporation_id
+            new_mails_qs = new_mails_qs.filter(recipients__id=corporation_id)
+        else:
+            raise NotImplementedError("Unknown mail category")
         return new_mails_qs
+
+    def is_alliance_mail(self, mail: CharacterMail) -> bool:
+        alliance_id = mail.character.character_ownership.character.alliance_id
+        if not alliance_id:
+            return False
+        return mail.recipients.filter(id=alliance_id).exists()
+
+    def is_corporation_mail(self, mail: CharacterMail) -> bool:
+        corporation_id = mail.character.character_ownership.character.corporation_id
+        return mail.recipients.filter(id=corporation_id).exists()
 
     def _content_with_mentions(self) -> str:
         if self.ping_type is self.ChannelPingType.EVERYBODY:
