@@ -1,9 +1,7 @@
 import datetime as dt
+from typing import List
 
-import grpc
-from discordproxy.discord_api_pb2 import Embed, SendChannelMessageRequest
-from discordproxy.discord_api_pb2_grpc import DiscordApiStub
-from discordproxy.helpers import parse_error_details
+from discordproxy.discord_api_pb2 import Embed
 from memberaudit.models import Character, CharacterMail
 
 from django.db import models
@@ -15,8 +13,9 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS
-from .core import chunks_by_lines, eve_xml_to_discord_markup
+from .core import eve_xml_to_discord_markup, send_message_to_discord
 from .managers import DiscordChannelManager
+from .utils import chunks_by_lines
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -60,37 +59,47 @@ class RelayConfig(models.Model):
     def __str__(self) -> str:
         return f"#{self.pk}"
 
-    def send_new_mails(self):
-        """Send all new mails to configured channels."""
-        new_mails = self.new_mails_queryset()
-        if not new_mails.exists():
-            logger.info("No new mails to forward.")
-            return
-        with grpc.insecure_channel("localhost:50051") as channel:
-            logger.info(
-                "Forwarding %s eve mails to %s channel(s).",
-                new_mails.count(),
-                self.channels.count(),
+    def send_mail(self, mail: CharacterMail, channel: "DiscordChannel"):
+        """Send one mail to channel."""
+        embeds = self._generate_embeds()
+        messages = []
+        for num, embed in enumerate(embeds, start=1):
+            content = self._content_with_mentions() if num == 1 else ""
+            messages.add(tuple(content, embed))
+        if send_message_to_discord(channel_id=channel.id, messages=messages):
+            self.mails_sent.add(mail)
+
+    def _content_with_mentions(self) -> str:
+        if self.ping_type is self.ChannelPingType.EVERYBODY:
+            return "@everybody"
+        if self.ping_type is self.ChannelPingType.HERE:
+            return "@here"
+        return ""
+
+    def _generate_embeds(mail: CharacterMail) -> List[Embed]:
+        recipients = ", ".join(
+            [obj.name_plus for obj in mail.recipients.order_by("name")]
+        )
+        full_description = (
+            f"**From**: {mail.sender.name_plus}\n"
+            f"**To**: {recipients}\n"
+            f"**Sent**: {mail.timestamp.strftime(DATETIME_FORMAT)}\n\n"
+        )
+        full_description += eve_xml_to_discord_markup(mail.body)
+        description_chunks = chunks_by_lines(full_description, 3500)
+        chunks_count = len(description_chunks)
+        embeds = []
+        for num, description_chunk in enumerate(description_chunks, start=1):
+            footer_text = f"{num}/{chunks_count}" if chunks_count > 1 else ""
+            title = mail.subject if num == 1 else ""
+            embeds.append(
+                Embed(
+                    footer=Embed.Footer(text=footer_text),
+                    description=description_chunk,
+                    timestamp=mail.timestamp.isoformat(),
+                    title=title,
+                )
             )
-            client = DiscordApiStub(channel)
-            for mail in new_mails.order_by("timestamp"):
-                recipients = ", ".join(
-                    [obj.name_plus for obj in mail.recipients.order_by("name")]
-                )
-                full_description = (
-                    f"**From**: {mail.sender.name_plus}\n"
-                    f"**To**: {recipients}\n"
-                    f"**Sent**: {mail.timestamp.strftime(DATETIME_FORMAT)}\n\n"
-                )
-                full_description += eve_xml_to_discord_markup(mail.body)
-                for channel in self.channels.all():
-                    self._send_message_to_discord(
-                        client=client,
-                        mail=mail,
-                        channel=channel,
-                        full_description=full_description,
-                    )
-                self.mails_sent.add(mail)
 
     def new_mails_queryset(self) -> models.QuerySet:
         oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
@@ -114,43 +123,6 @@ class RelayConfig(models.Model):
         else:
             raise NotImplementedError("Unknown mail category")
         return new_mails_qs
-
-    def _send_message_to_discord(self, client, mail, channel, full_description):
-        description_chunks = chunks_by_lines(full_description, 3500)
-        chunks_count = len(description_chunks)
-        for num, description_chunk in enumerate(description_chunks, start=1):
-            footer_text = f"{num}/{chunks_count}" if chunks_count > 1 else ""
-            title = mail.subject if num == 1 else ""
-            embed = Embed(
-                footer=Embed.Footer(text=footer_text),
-                description=description_chunk,
-                timestamp=mail.timestamp.isoformat(),
-                title=title,
-            )
-            content = self._content_with_mentions()
-            request = SendChannelMessageRequest(
-                content=content, channel_id=channel.id, embed=embed
-            )
-            try:
-                client.SendChannelMessage(request)
-            except grpc.RpcError as e:
-                details = parse_error_details(e)
-                logger.warning(
-                    "gRPC call failed. "
-                    "HTTP response code: %s\n"
-                    "JSON error code:%s\n"
-                    "Discord error message:%s",
-                    details.status,
-                    details.code,
-                    details.text,
-                )
-
-    def _content_with_mentions(self) -> str:
-        if self.ping_type is self.ChannelPingType.EVERYBODY:
-            return "@everybody"
-        if self.ping_type is self.ChannelPingType.HERE:
-            return "@here"
-        return ""
 
 
 class DiscordChannel(models.Model):

@@ -1,9 +1,18 @@
 from typing import List
 
+import grpc
 from bs4 import BeautifulSoup
+from discordproxy.discord_api_pb2 import Embed, SendChannelMessageRequest
+from discordproxy.discord_api_pb2_grpc import DiscordApiStub
+from discordproxy.helpers import parse_error_details
 
-from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator
+from allianceauth.services.hooks import get_extension_logger
+from app_utils.logging import LoggerAddTag
+
+from . import __title__
+from .utils import is_string_an_url
+
+logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 def eve_xml_to_discord_markup(xml_doc: str) -> str:
@@ -29,24 +38,25 @@ def eve_xml_to_discord_markup(xml_doc: str) -> str:
     return soup.get_text()
 
 
-def chunks_by_lines(full_text: str, max_lengths: int) -> List[str]:
-    """Converts text into chunks not exceeding max_lengths and splity by newline."""
-    parts = list()
-    partial_text = ""
-    for line in full_text.splitlines(keepends=True):
-        if len(partial_text + line) > max_lengths:
-            parts.append(partial_text)
-            partial_text = ""
-        partial_text += line
-    if partial_text:
-        parts.append(partial_text)
-    return parts
-
-
-def is_string_an_url(url_string: str) -> bool:
-    validate_url = URLValidator()
-    try:
-        validate_url(url_string)
-    except ValidationError:
-        return False
+def send_message_to_discord(channel_id: int, messages: List[str, Embed]) -> bool:
+    for message in messages:
+        with grpc.insecure_channel("localhost:50051") as grpc_channel:
+            client = DiscordApiStub(grpc_channel)
+            request = SendChannelMessageRequest(
+                content=message.content, channel_id=channel_id, embed=message.embed
+            )
+            try:
+                client.SendChannelMessage(request)
+            except grpc.RpcError as e:
+                details = parse_error_details(e)
+                logger.warning(
+                    "gRPC call failed. "
+                    "HTTP response code: %s\n"
+                    "JSON error code:%s\n"
+                    "Discord error message:%s",
+                    details.status,
+                    details.code,
+                    details.text,
+                )
+                return False
     return True
