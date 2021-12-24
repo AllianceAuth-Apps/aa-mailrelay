@@ -28,8 +28,9 @@ class RelayConfig(models.Model):
         EVERYBODY = "PE", "@everybody"
 
     class MailCategory(models.TextChoices):
-        ALLIANCE = "AL", "Alliance mails"
-        CORPORATION = "CP", "Corporation mails"
+        ALL = "CL", "All mails"
+        ALLIANCE = "AM", "Alliance mails"
+        CORPORATION = "CM", "Corporation mails"
 
     character = models.ForeignKey(Character, on_delete=models.CASCADE)
     channels = models.ManyToManyField("DiscordChannel")
@@ -99,7 +100,9 @@ class RelayConfig(models.Model):
             .exclude(pk__in=self.mails_sent.values_list("pk", flat=True))
             .filter(timestamp__gte=oldest_timestamp)
         )
-        if self.mail_category == self.MailCategory.ALLIANCE:
+        if self.mail_category == self.MailCategory.ALL:
+            pass
+        elif self.mail_category == self.MailCategory.ALLIANCE:
             alliance_id = self.character.character_ownership.character.alliance_id
             if alliance_id:
                 new_mails_qs = new_mails_qs.filter(recipients__id=alliance_id)
