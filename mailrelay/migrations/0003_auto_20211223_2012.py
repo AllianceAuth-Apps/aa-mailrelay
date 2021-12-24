@@ -6,18 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mailrelay', '0002_relayconfig_mails_sent'),
+        ("mailrelay", "0002_relayconfig_mails_sent"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='relayconfig',
-            name='notification_types',
+            model_name="relayconfig",
+            name="notification_types",
         ),
         migrations.AddField(
-            model_name='relayconfig',
-            name='mail_category',
-            field=models.CharField(choices=[('AL', 'Alliance mails'), ('CP', 'Corporation mails')], default='AL', help_text='Category of mails that you want to relay to Discord.', max_length=2),
+            model_name="relayconfig",
+            name="mail_category",
+            field=models.CharField(
+                choices=[("AL", "Alliance mails"), ("CP", "Corporation mails")],
+                default="AL",
+                help_text="Category of mails that you want to relay to Discord.",
+                max_length=2,
+            ),
             preserve_default=False,
         ),
     ]

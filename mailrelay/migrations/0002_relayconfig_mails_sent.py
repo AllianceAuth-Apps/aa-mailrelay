@@ -6,14 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('memberaudit', '0006_add_current_ship'),
-        ('mailrelay', '0001_initial'),
+        ("memberaudit", "0006_add_current_ship"),
+        ("mailrelay", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='relayconfig',
-            name='mails_sent',
-            field=models.ManyToManyField(related_name='_mailrelay_relayconfig_mails_sent_+', to='memberaudit.CharacterMail'),
+            model_name="relayconfig",
+            name="mails_sent",
+            field=models.ManyToManyField(
+                related_name="_mailrelay_relayconfig_mails_sent_+",
+                to="memberaudit.CharacterMail",
+            ),
         ),
     ]
