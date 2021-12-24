@@ -13,7 +13,8 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS
-from .core import eve_xml_to_discord_markup, send_message_to_discord
+from .core.discord import send_messages_to_channel
+from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
 from .utils import chunks_by_lines
 
@@ -59,15 +60,17 @@ class RelayConfig(models.Model):
     def __str__(self) -> str:
         return f"#{self.pk}"
 
-    def send_mail(self, mail: CharacterMail, channel: "DiscordChannel"):
+    def send_mail(self, mail: CharacterMail, channel: "DiscordChannel") -> bool:
         """Send one mail to channel."""
-        embeds = self._generate_embeds()
+        embeds = self._generate_embeds(mail)
         messages = []
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
-            messages.add(tuple(content, embed))
-        if send_message_to_discord(channel_id=channel.id, messages=messages):
-            self.mails_sent.add(mail)
+            messages.append(tuple([content, embed]))
+        if not send_messages_to_channel(channel_id=channel.id, messages=messages):
+            return False
+        self.mails_sent.add(mail)
+        return True
 
     def _content_with_mentions(self) -> str:
         if self.ping_type is self.ChannelPingType.EVERYBODY:
@@ -76,7 +79,7 @@ class RelayConfig(models.Model):
             return "@here"
         return ""
 
-    def _generate_embeds(mail: CharacterMail) -> List[Embed]:
+    def _generate_embeds(self, mail: CharacterMail) -> List[Embed]:
         recipients = ", ".join(
             [obj.name_plus for obj in mail.recipients.order_by("name")]
         )
@@ -100,6 +103,7 @@ class RelayConfig(models.Model):
                     title=title,
                 )
             )
+        return embeds
 
     def new_mails_queryset(self) -> models.QuerySet:
         oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)

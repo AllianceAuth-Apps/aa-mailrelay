@@ -91,3 +91,18 @@ class TestRelayConfig(TestCase):
             {corporation_mail.pk, personal_mail.pk, alliance_mail.pk},
             set(result.values_list("pk", flat=True)),
         )
+
+    @patch(MODULE_PATH + ".send_messages_to_channel")
+    def test_should_send_mail(self, mock_send_messages_to_channel):
+        # given
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        mail = create_character_mail(character=character, sender_id=1002)
+        config = create_relay_config(character=character)
+        # when
+        result = config.send_mail(mail, config.channels.first())
+        # then
+        self.assertTrue(result)
+        self.assertTrue(mock_send_messages_to_channel.called)

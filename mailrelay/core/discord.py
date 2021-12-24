@@ -1,44 +1,44 @@
-from typing import List
+from typing import Iterable, List, Tuple
 
 import grpc
-from bs4 import BeautifulSoup
-from discordproxy.discord_api_pb2 import Embed, SendChannelMessageRequest
+from discordproxy.discord_api_pb2 import (
+    Channel,
+    Embed,
+    GetGuildChannelsRequest,
+    SendChannelMessageRequest,
+)
 from discordproxy.discord_api_pb2_grpc import DiscordApiStub
 from discordproxy.helpers import parse_error_details
+
+from django.conf import settings
 
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
-from . import __title__
-from .utils import is_string_an_url
+from .. import __title__
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
-def eve_xml_to_discord_markup(xml_doc: str) -> str:
-    """Converts Eve Online xml to Discord markup."""
-    soup = BeautifulSoup(xml_doc, "html.parser")
-    for element in soup.find_all("loc"):
-        element.unwrap()
-    for element in soup.find_all("br"):
-        element.replace_with("\n")
-    for element in soup.find_all("b"):
-        element.replace_with(f"**{element.string}**")
-    for element in soup.find_all("i"):
-        element.replace_with(f"_{element.string}_")
-    for element in soup.find_all("u"):
-        element.replace_with(f"__{element.string}__")
-    for element in soup.find_all("a"):
-        link = element["href"]
-        text = element.string
-        if is_string_an_url(link):
-            element.replace_with(f"[{link}]({text})")
-        else:
-            element.replace_with(f"**{text}**")
-    return soup.get_text()
+def fetch_text_channels() -> Iterable:
+    return fetch_channels(channel_type=Channel.Type.GUILD_TEXT)
 
 
-def send_message_to_discord(channel_id: int, messages: List[str, Embed]) -> bool:
+def fetch_channels(channel_type=None) -> Iterable:
+    with grpc.insecure_channel("localhost:50051") as channel:
+        client = DiscordApiStub(channel)
+        request = GetGuildChannelsRequest(guild_id=int(settings.DISCORD_GUILD_ID))
+        response = client.GetGuildChannels(request)
+    channels = response.channels
+    if channel_type:
+        return [obj for obj in response.channels if obj.type == channel_type]
+    return channels
+
+
+def send_messages_to_channel(
+    channel_id: int, messages: List[Tuple[str, Embed]]
+) -> bool:
+    """Send messages to Discord channel"""
     for message in messages:
         with grpc.insecure_channel("localhost:50051") as grpc_channel:
             client = DiscordApiStub(grpc_channel)

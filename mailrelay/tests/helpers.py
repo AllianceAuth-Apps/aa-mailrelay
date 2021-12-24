@@ -1,12 +1,22 @@
 import datetime as dt
 
+from discordproxy.discord_api_pb2 import Channel
 from memberaudit.models import CharacterMail, MailEntity
 from pytz import utc
 
-from django.db.models import Max
 from eveuniverse.models import EveEntity
 
-from ..models import RelayConfig
+from ..models import DiscordChannel, RelayConfig
+
+
+def id_generator() -> int:
+    seed = 1
+    while True:
+        yield seed
+        seed += 1
+
+
+unique_ids = id_generator()
 
 
 def create_eve_entity(**kwargs) -> EveEntity:
@@ -43,7 +53,7 @@ def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterM
         raise ValueError("character parameter not provided")
     character = kwargs["character"]
     sender, _ = MailEntity.objects.update_or_create_from_eve_entity_id(id=sender_id)
-    mail_id = _generate_mail_id()
+    mail_id = next(unique_ids)
     kwargs.update(
         {
             "subject": f"subject #{mail_id}",
@@ -63,16 +73,23 @@ def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterM
     return mail
 
 
-def _generate_mail_id() -> int:
-    mail_id = CharacterMail.objects.aggregate(Max("mail_id"))["mail_id__max"]
-    if not mail_id:
-        mail_id = 1
-    else:
-        mail_id += 1
-    return mail_id
-
-
 def create_relay_config(**kwargs):
     if "mail_category" not in kwargs:
         kwargs["mail_category"] = RelayConfig.MailCategory.ALL
-    return RelayConfig.objects.create(**kwargs)
+    config = RelayConfig.objects.create(**kwargs)
+    channel = create_discord_channel(name="test")
+    config.channels.add(channel)
+    return config
+
+
+def create_discord_channel(**kwargs):
+    kwargs["id"] = next(unique_ids)
+    return DiscordChannel.objects.create(**kwargs)
+
+
+def create_discordproxy_channel(**kwargs) -> Channel:
+    if "id" not in kwargs:
+        kwargs["id"] = next(unique_ids)
+    if "type" not in kwargs:
+        kwargs["type"] = Channel.Type.GUILD_TEXT
+    return Channel(**kwargs)

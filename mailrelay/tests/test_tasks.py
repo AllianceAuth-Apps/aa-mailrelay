@@ -1,4 +1,3 @@
-"""
 import datetime as dt
 from unittest.mock import patch
 
@@ -17,14 +16,16 @@ from .helpers import (
     create_relay_config,
 )
 
-MODELS_PATH = "mailrelay.modules"
+MODELS_PATH = "mailrelay.models"
 TASKS_PATH = "mailrelay.tasks"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
+@patch(MODELS_PATH + ".RelayConfig.send_mail")
 class TestForwardNewMails(NoSocketsTestCase):
-    def test_should_forward_all_mails(self):
+    def test_should_forward_all_mails(self, mock_send_mail):
         # given
+        mock_send_mail.return_value = True
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
         create_eve_entities_from_evecharacter(character.character_ownership.character)
@@ -37,9 +38,7 @@ class TestForwardNewMails(NoSocketsTestCase):
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
-            forward_new_mails_for_config.delay()
+            forward_new_mails_for_config.delay(config_pk=config.pk)
         # then
-        # self.assertSetEqual(
-        #     {corporation_mail.pk}, set(result.values_list("pk", flat=True))
-        # )
-"""
+        mails_pk = {call[1]["mail"].pk for call in mock_send_mail.call_args_list}
+        self.assertSetEqual(mails_pk, {mail_1.pk, mail_2.pk})

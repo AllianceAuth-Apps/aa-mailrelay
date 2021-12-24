@@ -80,4 +80,4 @@ def forward_mail_to_channel(config_pk, mail_pk, channel_pk):
     config = RelayConfig.objects.select_related("character").get(pk=config_pk)
     mail = config.character.mails.get(pk=mail_pk)
     channel = config.channels.get(pk=channel_pk)
-    config.send_mail(mail, channel)
+    config.send_mail(mail=mail, channel=channel)
