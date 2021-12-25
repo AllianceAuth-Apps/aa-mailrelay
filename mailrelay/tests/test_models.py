@@ -173,6 +173,23 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         self.assertFalse(mock_send_messages_to_channels.called)
 
 
+class TestRelayConfigOther(NoSocketsTestCase):
+    def test_should_record_successful_relay(self):
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        config = create_relay_config(character=character)
+        my_now = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+        # when
+        with patch(MODELS_PATH + ".now") as mock_now:
+            mock_now.return_value = my_now
+            config.record_successful_relay()
+        # then
+        config.refresh_from_db()
+        self.assertAlmostEqual(
+            config.last_relay_at, my_now, delta=dt.timedelta(seconds=30)
+        )
+
+
 @patch(MANAGERS_PATH + ".fetch_text_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
     def test_should_create_new_channels_from_scratch(self, mock_fetch_text_channels):

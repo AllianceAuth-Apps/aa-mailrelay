@@ -57,17 +57,26 @@ def forward_new_mails_for_config(config_pk):
         new_mails_qs.count(),
         config.discord_channel,
     )
-    chain(
-        [
-            send_mail.si(config_pk=config_pk, mail_pk=mail.pk)
-            for mail in new_mails_qs.order_by("timestamp")
-        ]
-    ).delay()
+    my_tasks = [
+        forward_mail_to_discord.si(config_pk=config_pk, mail_pk=mail.pk)
+        for mail in new_mails_qs.order_by("timestamp")
+    ]
+    my_tasks.append(record_successful_relay.si(config_pk))
+    chain(my_tasks).delay()
 
 
 @shared_task
-def send_mail(config_pk, mail_pk):
-    """Forward one mail to one channel."""
-    config = RelayConfig.objects.select_related("character").get(pk=config_pk)
+def forward_mail_to_discord(config_pk, mail_pk):
+    """Forward one mail to Discord."""
+    config = RelayConfig.objects.select_related("character", "discord_channel").get(
+        pk=config_pk
+    )
     mail = config.character.mails.get(pk=mail_pk)
     config.send_mail(mail=mail)
+
+
+@shared_task
+def record_successful_relay(config_pk):
+    """Record completion of successful relay."""
+    config = RelayConfig.objects.get(pk=config_pk)
+    config.record_successful_relay()

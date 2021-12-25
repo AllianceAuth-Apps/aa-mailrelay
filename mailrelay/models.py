@@ -68,11 +68,35 @@ class RelayConfig(models.Model):
     def __str__(self) -> str:
         return f"#{self.pk}"
 
+    def new_mails_queryset(self) -> models.QuerySet:
+        """Determine which mails have not yet been sent."""
+        oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
+        self.mails_sent.filter(timestamp__lt=oldest_timestamp).delete()
+        new_mails_qs = (
+            self.character.mails.select_related("sender")
+            .exclude(pk__in=self.mails_sent.values_list("pk", flat=True))
+            .filter(timestamp__gte=oldest_timestamp)
+        )
+        if self.mail_category == self.MailCategory.ALL:
+            pass
+        elif self.mail_category == self.MailCategory.ALLIANCE:
+            alliance_id = self.character.character_ownership.character.alliance_id
+            if alliance_id:
+                new_mails_qs = new_mails_qs.filter(recipients__id=alliance_id)
+            else:
+                new_mails_qs = new_mails_qs.none()
+        elif self.mail_category == self.MailCategory.CORPORATION:
+            corporation_id = self.character.character_ownership.character.corporation_id
+            new_mails_qs = new_mails_qs.filter(recipients__id=corporation_id)
+        else:
+            raise NotImplementedError(f"Unknown mail category: {self.mail_category}")
+        return new_mails_qs
+
     def send_mail(self, mail: CharacterMail):
         """Send one mail to channel."""
         if not mail.body:
             return
-        if not self.channel:
+        if not self.discord_channel:
             raise ValueError(f"No channel configured for config {self}")
         embeds = self._generate_embeds(mail)
         messages = []
@@ -119,28 +143,9 @@ class RelayConfig(models.Model):
             )
         return embeds
 
-    def new_mails_queryset(self) -> models.QuerySet:
-        oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
-        self.mails_sent.filter(timestamp__lt=oldest_timestamp).delete()
-        new_mails_qs = (
-            self.character.mails.select_related("sender")
-            .exclude(pk__in=self.mails_sent.values_list("pk", flat=True))
-            .filter(timestamp__gte=oldest_timestamp)
-        )
-        if self.mail_category == self.MailCategory.ALL:
-            pass
-        elif self.mail_category == self.MailCategory.ALLIANCE:
-            alliance_id = self.character.character_ownership.character.alliance_id
-            if alliance_id:
-                new_mails_qs = new_mails_qs.filter(recipients__id=alliance_id)
-            else:
-                new_mails_qs = new_mails_qs.none()
-        elif self.mail_category == self.MailCategory.CORPORATION:
-            corporation_id = self.character.character_ownership.character.corporation_id
-            new_mails_qs = new_mails_qs.filter(recipients__id=corporation_id)
-        else:
-            raise NotImplementedError("Unknown mail category")
-        return new_mails_qs
+    def record_successful_relay(self):
+        self.last_relay_at = now()
+        self.save(update_fields=["last_relay_at"])
 
 
 class DiscordChannel(models.Model):

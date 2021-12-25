@@ -82,5 +82,7 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             forward_new_mails_for_config(config_pk=config.pk)
         # then
+        config.refresh_from_db()
         mails_pk = {call[1]["mail"].pk for call in mock_send_mail.call_args_list}
         self.assertSetEqual(mails_pk, {mail_1.pk, mail_2.pk})
+        self.assertIsNotNone(config.last_relay_at)
