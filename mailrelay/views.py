@@ -15,9 +15,6 @@ def admin_update_discord_channels(request):
         messages.success(
             request, f"Successfully updated {channels_count} channels from Discord."
         )
-    except DiscordProxyFetchingChannelsFailed:
-        messages.error(
-            request,
-            "Failed to fetch channels from Discord. Please check logs for details.",
-        )
+    except DiscordProxyFetchingChannelsFailed as ex:
+        messages.warning(request, f"Failed to fetch channels from Discord: {ex}")
     return redirect("admin:mailrelay_relayconfig_changelist")

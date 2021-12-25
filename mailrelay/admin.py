@@ -19,14 +19,9 @@ class RelayConfigAdmin(admin.ModelAdmin):
             )
         return channels
 
-    actions = ["send_new_mails"]
-
-    def send_new_mails(self, request, queryset):
-        for obj in queryset:
-            obj.send_new_mails()
-
     filter_horizontal = ("channels",)
     autocomplete_fields = ["character"]
+    fields = ("character", "mail_category", "channels", "ping_type", "is_enabled")
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         """overriding this formfield to have sorted lists in the form"""

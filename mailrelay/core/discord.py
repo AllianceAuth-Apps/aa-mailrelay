@@ -43,17 +43,8 @@ def _fetch_channels(channel_type=None) -> Iterable:
         try:
             response = client.GetGuildChannels(request)
         except grpc.RpcError as ex:
-            details = parse_error_details(ex)
-            logger.error(
-                "gRPC call failed. "
-                "HTTP response code: %s\n"
-                "JSON error code:%s\n"
-                "Discord error message:%s",
-                details.status,
-                details.code,
-                details.text,
-            )
-            raise DiscordProxyFetchingChannelsFailed()
+            error_text = _log_grpc_error(ex)
+            raise DiscordProxyFetchingChannelsFailed(error_text)
     channels = response.channels
     if channel_type:
         return [obj for obj in response.channels if obj.type == channel_type]
@@ -76,14 +67,17 @@ def send_messages_to_channels(messages: List[DiscordMessage]) -> None:
             try:
                 client.SendChannelMessage(request)
             except grpc.RpcError as ex:
-                details = parse_error_details(ex)
-                logger.error(
-                    "gRPC call failed. "
-                    "HTTP response code: %s\n"
-                    "JSON error code:%s\n"
-                    "Discord error message:%s",
-                    details.status,
-                    details.code,
-                    details.text,
-                )
-                raise DiscordProxySendingMessagesFailed()
+                error_text = _log_grpc_error(ex)
+                raise DiscordProxySendingMessagesFailed(error_text)
+
+
+def _log_grpc_error(ex) -> str:
+    details = parse_error_details(ex)
+    logger.error(
+        "gRPC call failed. HTTP response code: %s, JSON error code:%s, "
+        "Discord error message: %s",
+        details.status,
+        details.code,
+        details.text,
+    )
+    return details.text

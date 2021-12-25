@@ -36,7 +36,7 @@ class RelayConfig(models.Model):
     channels = models.ManyToManyField("DiscordChannel")
     is_enabled = models.BooleanField(
         default=True,
-        help_text="toogle for activating or deactivating relaying mail",
+        help_text="Toogle for activating or deactivating relaying mails.",
     )
     mail_category = models.CharField(
         max_length=2,
@@ -48,13 +48,13 @@ class RelayConfig(models.Model):
         choices=ChannelPingType.choices,
         default=ChannelPingType.NONE,
         verbose_name="channel pings",
-        help_text="Option to ping every member of the channel",
+        help_text="Option to ping every member of the channel.",
     )
     mails_sent = models.ManyToManyField(
         CharacterMail,
         related_name="+",
         editable=False,
-        help_text="Latest mails that have already been sent",
+        help_text="Latest mails that have already been sent.",
     )
 
     def __str__(self) -> str:

@@ -26,7 +26,7 @@ class TestViews(NoSocketsTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(mock_messages.success.called)
 
-    def test_should_post_error_message(self, mock_messages, mock_sync):
+    def test_should_post_warning_message(self, mock_messages, mock_sync):
         # given
         mock_sync.side_effect = DiscordProxyFetchingChannelsFailed
         factory = RequestFactory()
@@ -36,4 +36,4 @@ class TestViews(NoSocketsTestCase):
         response = admin_update_discord_channels(request)
         # then
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(mock_messages.error.called)
+        self.assertTrue(mock_messages.warning.called)
