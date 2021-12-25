@@ -107,6 +107,20 @@ class TestRelayConfig(NoSocketsTestCase):
         # then
         self.assertTrue(mock_send_messages_to_channel.called)
 
+    @patch(MODELS_PATH + ".send_messages_to_channel")
+    def test_should_not_send_mail_without_body(self, mock_send_messages_to_channel):
+        # given
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        mail = create_character_mail(character=character, sender_id=1002, body="")
+        config = create_relay_config(character=character)
+        # when
+        config.send_mail(mail, config.channels.first())
+        # then
+        self.assertFalse(mock_send_messages_to_channel.called)
+
 
 @patch(MANAGERS_PATH + ".fetch_text_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):

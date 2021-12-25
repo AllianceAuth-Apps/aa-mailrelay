@@ -13,7 +13,7 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS
-from .core.discord import send_messages_to_channel
+from .core.discord import DiscordMessage, send_messages_to_channel
 from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
 from .utils import chunks_by_lines
@@ -62,11 +62,13 @@ class RelayConfig(models.Model):
 
     def send_mail(self, mail: CharacterMail, channel: "DiscordChannel"):
         """Send one mail to channel."""
+        if not mail.body:
+            return
         embeds = self._generate_embeds(mail)
         messages = []
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
-            messages.append(tuple([content, embed]))
+            messages.append(DiscordMessage(content=content, embed=embed))
         send_messages_to_channel(channel_id=channel.id, messages=messages)
         self.mails_sent.add(mail)
 
@@ -83,8 +85,8 @@ class RelayConfig(models.Model):
         )
         full_description = (
             f"**From**: {mail.sender.name_plus}\n"
-            f"**To**: {recipients}\n"
-            f"**Sent**: {mail.timestamp.strftime(DATETIME_FORMAT)}\n\n"
+            f"**Sent**: {mail.timestamp.strftime(DATETIME_FORMAT)}\n"
+            f"**To**: {recipients}\n\n"
         )
         full_description += eve_xml_to_discord_markup(mail.body)
         description_chunks = chunks_by_lines(full_description, 3500)

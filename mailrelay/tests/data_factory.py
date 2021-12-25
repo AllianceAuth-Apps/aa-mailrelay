@@ -55,10 +55,11 @@ def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterM
     character = kwargs["character"]
     sender, _ = MailEntity.objects.update_or_create_from_eve_entity_id(id=sender_id)
     mail_id = next(unique_ids)
+    if "body" not in kwargs:
+        kwargs["body"] = f"body #{mail_id}"
     kwargs.update(
         {
             "subject": f"subject #{mail_id}",
-            "body": f"body #{mail_id}",
             "is_read": False,
             "mail_id": mail_id,
             "sender": sender,

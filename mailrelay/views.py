@@ -13,7 +13,7 @@ def admin_update_discord_channels(request):
     try:
         channels_count = DiscordChannel.objects.sync()
         messages.success(
-            request, f"Successfully updated {channels_count} channel from Discord."
+            request, f"Successfully updated {channels_count} channels from Discord."
         )
     except DiscordProxyFetchingChannelsFailed:
         messages.error(

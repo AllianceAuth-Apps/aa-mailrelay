@@ -1,9 +1,9 @@
-from typing import Iterable, List, Tuple
+from collections import namedtuple
+from typing import Iterable, List
 
 import grpc
 from discordproxy.discord_api_pb2 import (
     Channel,
-    Embed,
     GetGuildChannelsRequest,
     SendChannelMessageRequest,
 )
@@ -60,9 +60,10 @@ def fetch_channels(channel_type=None) -> Iterable:
     return channels
 
 
-def send_messages_to_channel(
-    channel_id: int, messages: List[Tuple[str, Embed]]
-) -> None:
+DiscordMessage = namedtuple("DiscordMessage", ["content", "embed"])
+
+
+def send_messages_to_channel(channel_id: int, messages: List[DiscordMessage]) -> None:
     """Send messages to Discord channel"""
     for message in messages:
         with grpc.insecure_channel("localhost:50051") as grpc_channel:
