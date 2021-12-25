@@ -189,6 +189,36 @@ class TestRelayConfigOther(NoSocketsTestCase):
             config.last_relay_at, my_now, delta=dt.timedelta(seconds=30)
         )
 
+    @patch(MODELS_PATH + ".MAILRELAY_RELAY_GRACE_MINUTES", 30)
+    def test_should_report_as_up(self):
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        config = create_relay_config(
+            character=character,
+            last_relay_at=dt.datetime(2021, 12, 24, 12, 15, tzinfo=utc),
+        )
+        # when
+        with patch(MODELS_PATH + ".now") as mock_now:
+            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            result = config.is_service_up
+        # then
+        self.assertTrue(result)
+
+    @patch(MODELS_PATH + ".MAILRELAY_RELAY_GRACE_MINUTES", 30)
+    def test_should_report_as_down(self):
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        config = create_relay_config(
+            character=character,
+            last_relay_at=dt.datetime(2021, 12, 24, 11, 55, tzinfo=utc),
+        )
+        # when
+        with patch(MODELS_PATH + ".now") as mock_now:
+            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            result = config.is_service_up
+        # then
+        self.assertFalse(result)
+
 
 @patch(MANAGERS_PATH + ".fetch_text_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):

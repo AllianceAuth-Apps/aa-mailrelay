@@ -8,7 +8,14 @@ from .models import DiscordChannel, RelayConfig
 @admin.register(RelayConfig)
 class RelayConfigAdmin(admin.ModelAdmin):
     change_list_template = "admin/mailrelay/relayconfig/change_list.html"
-    list_display = ("__str__", "character", "_channel", "is_enabled", "last_relay_at")
+    list_display = (
+        "__str__",
+        "character",
+        "_channel",
+        "is_enabled",
+        "last_relay_at",
+        "_is_service_up",
+    )
 
     @admin.display(ordering="discord_channel")
     def _channel(self, obj) -> str:
@@ -17,6 +24,10 @@ class RelayConfigAdmin(admin.ModelAdmin):
                 '<span style="color:red;"><b>Error: No channel configured</b></span>'
             )
         return str(obj.discord_channel)
+
+    @admin.display(boolean=True)
+    def _is_service_up(self, obj) -> bool:
+        return self.is_service_up
 
     autocomplete_fields = ["character"]
     fields = (

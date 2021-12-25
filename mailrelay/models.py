@@ -12,7 +12,7 @@ from app_utils.datetime import DATETIME_FORMAT
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS
+from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS, MAILRELAY_RELAY_GRACE_MINUTES
 from .core.discord import DiscordMessage, send_messages_to_channels
 from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
@@ -67,6 +67,12 @@ class RelayConfig(models.Model):
 
     def __str__(self) -> str:
         return f"#{self.pk}"
+
+    @property
+    def is_service_up(self) -> bool:
+        return now() - self.last_relay_at < dt.timedelta(
+            minutes=MAILRELAY_RELAY_GRACE_MINUTES
+        )
 
     def new_mails_queryset(self) -> models.QuerySet:
         """Determine which mails have not yet been sent."""
