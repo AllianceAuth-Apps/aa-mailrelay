@@ -27,7 +27,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
 
     @admin.display(boolean=True)
     def _is_service_up(self, obj) -> bool:
-        return self.is_service_up
+        return obj.is_service_up
 
     autocomplete_fields = ["character"]
     fields = (

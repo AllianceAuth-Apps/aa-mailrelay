@@ -70,6 +70,8 @@ class RelayConfig(models.Model):
 
     @property
     def is_service_up(self) -> bool:
+        if not self.last_relay_at:
+            return False
         return now() - self.last_relay_at < dt.timedelta(
             minutes=MAILRELAY_RELAY_GRACE_MINUTES
         )
