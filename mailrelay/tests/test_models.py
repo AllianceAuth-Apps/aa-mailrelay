@@ -154,7 +154,7 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         mail = create_character_mail(character=character, sender_id=1002)
         config = create_relay_config(character=character)
         # when
-        config.send_mail(mail, config.channels.first())
+        config.send_mail(mail)
         # then
         self.assertTrue(mock_send_messages_to_channels.called)
 
@@ -168,7 +168,7 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         mail = create_character_mail(character=character, sender_id=1002, body="")
         config = create_relay_config(character=character)
         # when
-        config.send_mail(mail, config.channels.first())
+        config.send_mail(mail)
         # then
         self.assertFalse(mock_send_messages_to_channels.called)
 

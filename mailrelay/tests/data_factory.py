@@ -80,9 +80,9 @@ def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterM
 def create_relay_config(**kwargs):
     if "mail_category" not in kwargs:
         kwargs["mail_category"] = RelayConfig.MailCategory.ALL
+    kwargs["discord_channel"] = create_discord_channel(name="test")
     config = RelayConfig.objects.create(**kwargs)
-    channel = create_discord_channel(name="test")
-    config.channels.add(channel)
+
     return config
 
 

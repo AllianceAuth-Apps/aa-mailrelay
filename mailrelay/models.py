@@ -32,8 +32,10 @@ class RelayConfig(models.Model):
         ALLIANCE = "AM", "Alliance mails"
         CORPORATION = "CM", "Corporation mails"
 
-    channels = models.ManyToManyField("DiscordChannel")
     character = models.ForeignKey(Character, on_delete=models.CASCADE)
+    discord_channel = models.ForeignKey(
+        "DiscordChannel", on_delete=models.SET_NULL, null=True
+    )
     is_enabled = models.BooleanField(
         default=True,
         help_text="Toogle for activating or deactivating relaying mails.",
@@ -66,16 +68,20 @@ class RelayConfig(models.Model):
     def __str__(self) -> str:
         return f"#{self.pk}"
 
-    def send_mail(self, mail: CharacterMail, channel: "DiscordChannel"):
+    def send_mail(self, mail: CharacterMail):
         """Send one mail to channel."""
         if not mail.body:
             return
+        if not self.channel:
+            raise ValueError(f"No channel configured for config {self}")
         embeds = self._generate_embeds(mail)
         messages = []
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
             messages.append(
-                DiscordMessage(channel_id=channel.id, content=content, embed=embed)
+                DiscordMessage(
+                    channel_id=self.discord_channel.id, content=content, embed=embed
+                )
             )
         send_messages_to_channels(messages=messages)
         self.mails_sent.add(mail)

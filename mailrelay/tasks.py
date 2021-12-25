@@ -21,8 +21,8 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 def forward_new_mails():
     """Forward new mails from all active configs."""
     for config in RelayConfig.objects.filter(is_enabled=True):
-        if not config.channels.exists():
-            logger.warning("No channels configured for config %s", config)
+        if not config.discord_channel:
+            logger.warning("No channel configured for config %s", config)
             continue
         chain(
             [
@@ -48,36 +48,26 @@ def forward_new_mails_for_config(config_pk):
     config = RelayConfig.objects.select_related(
         "character", "character__character_ownership__character"
     ).get(pk=config_pk)
-    if not config.new_mails_queryset().exists():
-        logger.info("No new mails to forward.")
-        return
-    for channel_pk in config.channels.values_list("pk", flat=True):
-        forward_new_mails_to_channel.delay(config_pk=config_pk, channel_pk=channel_pk)
-
-
-@shared_task
-def forward_new_mails_to_channel(config_pk, channel_pk):
-    """Forward new mails from one config to one channel."""
-    config = RelayConfig.objects.select_related(
-        "character", "character__character_ownership__character"
-    ).get(pk=config_pk)
     new_mails_qs = config.new_mails_queryset()
-    channel = config.channels.get(pk=channel_pk)
-    logger.info("Forwarding %s eve mails to channel: %s", new_mails_qs.count(), channel)
+    if not new_mails_qs.exists():
+        logger.debug("No new mails to forward.")
+        return
+    logger.info(
+        "Forwarding %s eve mails to channel: %s",
+        new_mails_qs.count(),
+        config.discord_channel,
+    )
     chain(
         [
-            forward_mail_to_channel.si(
-                config_pk=config_pk, mail_pk=mail.pk, channel_pk=channel_pk
-            )
+            send_mail.si(config_pk=config_pk, mail_pk=mail.pk)
             for mail in new_mails_qs.order_by("timestamp")
         ]
     ).delay()
 
 
 @shared_task
-def forward_mail_to_channel(config_pk, mail_pk, channel_pk):
+def send_mail(config_pk, mail_pk):
     """Forward one mail to one channel."""
     config = RelayConfig.objects.select_related("character").get(pk=config_pk)
     mail = config.character.mails.get(pk=mail_pk)
-    channel = config.channels.get(pk=channel_pk)
-    config.send_mail(mail=mail, channel=channel)
+    config.send_mail(mail=mail)

@@ -48,7 +48,7 @@ class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
         character_1003 = add_memberaudit_character_to_user(user_1003, 1003)
         create_relay_config(character=character_1003, is_enabled=False)
         # when
-        forward_new_mails.delay()
+        forward_new_mails()
         # then
         self.assertEqual(mock_update_character_mailing_lists.si.call_count, 2)
         self.assertEqual(mock_update_character_mail_labels.si.call_count, 2)
@@ -80,7 +80,7 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
-            forward_new_mails_for_config.delay(config_pk=config.pk)
+            forward_new_mails_for_config(config_pk=config.pk)
         # then
         mails_pk = {call[1]["mail"].pk for call in mock_send_mail.call_args_list}
         self.assertSetEqual(mails_pk, {mail_1.pk, mail_2.pk})
