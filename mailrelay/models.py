@@ -60,17 +60,15 @@ class RelayConfig(models.Model):
     def __str__(self) -> str:
         return f"#{self.pk}"
 
-    def send_mail(self, mail: CharacterMail, channel: "DiscordChannel") -> bool:
+    def send_mail(self, mail: CharacterMail, channel: "DiscordChannel"):
         """Send one mail to channel."""
         embeds = self._generate_embeds(mail)
         messages = []
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
             messages.append(tuple([content, embed]))
-        if not send_messages_to_channel(channel_id=channel.id, messages=messages):
-            return False
+        send_messages_to_channel(channel_id=channel.id, messages=messages)
         self.mails_sent.add(mail)
-        return True
 
     def _content_with_mentions(self) -> str:
         if self.ping_type is self.ChannelPingType.EVERYBODY:

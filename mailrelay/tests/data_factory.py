@@ -4,6 +4,7 @@ from discordproxy.discord_api_pb2 import Channel
 from memberaudit.models import CharacterMail, MailEntity
 from pytz import utc
 
+from django.contrib.auth.models import User
 from eveuniverse.models import EveEntity
 
 from ..models import DiscordChannel, RelayConfig
@@ -93,3 +94,7 @@ def create_discordproxy_channel(**kwargs) -> Channel:
     if "type" not in kwargs:
         kwargs["type"] = Channel.Type.GUILD_TEXT
     return Channel(**kwargs)
+
+
+def create_superuser(**kwargs):
+    return User.objects.create_superuser(**kwargs)

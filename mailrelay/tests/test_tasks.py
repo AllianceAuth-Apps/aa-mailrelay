@@ -8,8 +8,8 @@ from django.test import override_settings
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..tasks import forward_new_mails_for_config
-from .helpers import (
+from ..tasks import forward_new_mails, forward_new_mails_for_config
+from .data_factory import (
     create_character_mail,
     create_eve_entities_from_evecharacter,
     create_eve_entity,
@@ -21,8 +21,50 @@ TASKS_PATH = "mailrelay.tasks"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
+@patch(TASKS_PATH + ".update_character_mailing_lists", spec=True)
+@patch(TASKS_PATH + ".update_character_mail_labels", spec=True)
+@patch(TASKS_PATH + ".update_character_mail_headers", spec=True)
+@patch(TASKS_PATH + ".update_character_mail_bodies", spec=True)
+@patch(TASKS_PATH + ".update_unresolved_eve_entities", spec=True)
+@patch(TASKS_PATH + ".forward_new_mails_for_config", spec=True)
+class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
+    def test_should_send_mails(
+        self,
+        mock_forward_new_mails_for_config,
+        mock_update_unresolved_eve_entities,
+        mock_update_character_mail_bodies,
+        mock_update_character_mail_headers,
+        mock_update_character_mail_labels,
+        mock_update_character_mailing_lists,
+    ):
+        # given
+        user_1001 = create_fake_user(1001, "Bruce Wayne")
+        character_1001 = add_memberaudit_character_to_user(user_1001, 1001)
+        config_1001 = create_relay_config(character=character_1001)
+        user_1002 = create_fake_user(1002, "Peter Parker")
+        character_1002 = add_memberaudit_character_to_user(user_1002, 1002)
+        config_1002 = create_relay_config(character=character_1002)
+        user_1003 = create_fake_user(1003, "Clark Kent")
+        character_1003 = add_memberaudit_character_to_user(user_1003, 1003)
+        create_relay_config(character=character_1003, is_enabled=False)
+        # when
+        forward_new_mails.delay()
+        # then
+        self.assertEqual(mock_update_character_mailing_lists.si.call_count, 2)
+        self.assertEqual(mock_update_character_mail_labels.si.call_count, 2)
+        self.assertEqual(mock_update_character_mail_headers.si.call_count, 2)
+        self.assertEqual(mock_update_character_mail_bodies.si.call_count, 2)
+        self.assertEqual(mock_update_unresolved_eve_entities.si.call_count, 2)
+        self.assertEqual(mock_forward_new_mails_for_config.si.call_count, 2)
+        called_config_pks = {
+            obj[0][0] for obj in mock_forward_new_mails_for_config.si.call_args_list
+        }
+        self.assertSetEqual({config_1001.pk, config_1002.pk}, called_config_pks)
+
+
+@override_settings(CELERY_ALWAYS_EAGER=True)
 @patch(MODELS_PATH + ".RelayConfig.send_mail")
-class TestForwardNewMails(NoSocketsTestCase):
+class TestForwardNewMailsOneConfig(NoSocketsTestCase):
     def test_should_forward_all_mails(self, mock_send_mail):
         # given
         mock_send_mail.return_value = True

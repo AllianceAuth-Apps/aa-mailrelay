@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from app_utils.testing import NoSocketsTestCase
 
 from ..core.discord import fetch_channels
-from .helpers import create_discordproxy_channel
+from .data_factory import create_discordproxy_channel
 
 MODULE_PATH = "mailrelay.core.discord"
 
