@@ -308,3 +308,6 @@ DEFAULT_FROM_EMAIL = ""
 #######################################
 # Add any custom settings below here. #
 #######################################
+
+# Discord service
+DISCORD_GUILD_ID = 42

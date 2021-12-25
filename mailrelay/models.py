@@ -32,16 +32,28 @@ class RelayConfig(models.Model):
         ALLIANCE = "AM", "Alliance mails"
         CORPORATION = "CM", "Corporation mails"
 
-    character = models.ForeignKey(Character, on_delete=models.CASCADE)
     channels = models.ManyToManyField("DiscordChannel")
+    character = models.ForeignKey(Character, on_delete=models.CASCADE)
     is_enabled = models.BooleanField(
         default=True,
         help_text="Toogle for activating or deactivating relaying mails.",
+    )
+    last_relay_at = models.DateTimeField(
+        null=True,
+        default=None,
+        editable=False,
+        help_text="Time of last successful relay.",
     )
     mail_category = models.CharField(
         max_length=2,
         choices=MailCategory.choices,
         help_text="Category of mails that you want to relay to Discord.",
+    )
+    mails_sent = models.ManyToManyField(
+        CharacterMail,
+        related_name="+",
+        editable=False,
+        help_text="Latest mails that have already been sent.",
     )
     ping_type = models.CharField(
         max_length=2,
@@ -49,12 +61,6 @@ class RelayConfig(models.Model):
         default=ChannelPingType.NONE,
         verbose_name="channel pings",
         help_text="Option to ping every member of the channel.",
-    )
-    mails_sent = models.ManyToManyField(
-        CharacterMail,
-        related_name="+",
-        editable=False,
-        help_text="Latest mails that have already been sent.",
     )
 
     def __str__(self) -> str:
