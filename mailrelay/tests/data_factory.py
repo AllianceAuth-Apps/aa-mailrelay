@@ -1,5 +1,7 @@
 import datetime as dt
+import json
 
+import grpc
 from discordproxy.discord_api_pb2 import Channel
 from memberaudit.models import CharacterMail, MailEntity
 from pytz import utc
@@ -99,3 +101,17 @@ def create_discordproxy_channel(**kwargs) -> Channel:
 
 def create_superuser(**kwargs):
     return User.objects.create_superuser(**kwargs)
+
+
+def create_rpc_error():
+    error = grpc.RpcError()
+    error.code = lambda: grpc.StatusCode.NOT_FOUND
+    error.details = lambda: json.dumps(
+        {
+            "type": "HTTPException",
+            "status": 404,
+            "code": 50001,
+            "text": "User not found",
+        }
+    )
+    return error

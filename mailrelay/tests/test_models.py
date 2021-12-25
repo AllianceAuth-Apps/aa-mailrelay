@@ -20,7 +20,7 @@ MODELS_PATH = "mailrelay.models"
 MANAGERS_PATH = "mailrelay.managers"
 
 
-class TestRelayConfig(NoSocketsTestCase):
+class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
     def test_should_return_corporation_mails_only(self):
         # given
         user = create_fake_user(1001, "Bruce Wayne")
@@ -67,6 +67,28 @@ class TestRelayConfig(NoSocketsTestCase):
             {alliance_mail.pk}, set(result.values_list("pk", flat=True))
         )
 
+    def test_should_not_return_alliance_mails(self):
+        # given
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        character.character_ownership.character.alliance_id = None
+        character.character_ownership.character.alliance_name = ""
+        character.character_ownership.character.save()
+        create_eve_entity(id=1002, name="Peter Parker")
+        create_character_mail(character=character, sender_id=1002, recipient_ids=[3001])
+        create_character_mail(character=character, sender_id=1002)
+        create_character_mail(character=character, sender_id=1002, recipient_ids=[2001])
+        config = create_relay_config(
+            character=character, mail_category=RelayConfig.MailCategory.ALLIANCE
+        )
+        # when
+        with patch(MODELS_PATH + ".now") as mock_now:
+            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            result = config.new_mails_queryset()
+        # then
+        self.assertSetEqual(set(), set(result.values_list("pk", flat=True)))
+
     def test_should_return_all_mails(self):
         # given
         user = create_fake_user(1001, "Bruce Wayne")
@@ -93,8 +115,37 @@ class TestRelayConfig(NoSocketsTestCase):
             set(result.values_list("pk", flat=True)),
         )
 
-    @patch(MODELS_PATH + ".send_messages_to_channel")
-    def test_should_send_mail(self, mock_send_messages_to_channel):
+    @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 1)
+    def test_should_not_return_old_mails(self):
+        # given
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        new_mail = create_character_mail(
+            character=character,
+            sender_id=1002,
+            timestamp=dt.datetime(2021, 12, 24, 11, 30, tzinfo=utc),
+        )
+        create_character_mail(
+            character=character,
+            sender_id=1002,
+            timestamp=dt.datetime(2021, 12, 24, 11, 00, tzinfo=utc),
+        )
+        config = create_relay_config(
+            character=character, mail_category=RelayConfig.MailCategory.ALL
+        )
+        # when
+        with patch(MODELS_PATH + ".now") as mock_now:
+            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 29, tzinfo=utc)
+            result = config.new_mails_queryset()
+        # then
+        self.assertSetEqual({new_mail.pk}, set(result.values_list("pk", flat=True)))
+
+
+class TestRelayConfigSendMail(NoSocketsTestCase):
+    @patch(MODELS_PATH + ".send_messages_to_channels")
+    def test_should_send_valid_mail(self, mock_send_messages_to_channels):
         # given
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
@@ -105,10 +156,10 @@ class TestRelayConfig(NoSocketsTestCase):
         # when
         config.send_mail(mail, config.channels.first())
         # then
-        self.assertTrue(mock_send_messages_to_channel.called)
+        self.assertTrue(mock_send_messages_to_channels.called)
 
-    @patch(MODELS_PATH + ".send_messages_to_channel")
-    def test_should_not_send_mail_without_body(self, mock_send_messages_to_channel):
+    @patch(MODELS_PATH + ".send_messages_to_channels")
+    def test_should_not_send_mail_without_body(self, mock_send_messages_to_channels):
         # given
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
@@ -119,7 +170,7 @@ class TestRelayConfig(NoSocketsTestCase):
         # when
         config.send_mail(mail, config.channels.first())
         # then
-        self.assertFalse(mock_send_messages_to_channel.called)
+        self.assertFalse(mock_send_messages_to_channels.called)
 
 
 @patch(MANAGERS_PATH + ".fetch_text_channels", spec=True)

@@ -33,10 +33,10 @@ class DiscordProxySendingMessagesFailed(DiscordProxyError):
 
 
 def fetch_text_channels() -> Iterable:
-    return fetch_channels(channel_type=Channel.Type.GUILD_TEXT)
+    return _fetch_channels(channel_type=Channel.Type.GUILD_TEXT)
 
 
-def fetch_channels(channel_type=None) -> Iterable:
+def _fetch_channels(channel_type=None) -> Iterable:
     with grpc.insecure_channel("localhost:50051") as channel:
         client = DiscordApiStub(channel)
         request = GetGuildChannelsRequest(guild_id=int(settings.DISCORD_GUILD_ID))
@@ -60,16 +60,18 @@ def fetch_channels(channel_type=None) -> Iterable:
     return channels
 
 
-DiscordMessage = namedtuple("DiscordMessage", ["content", "embed"])
+DiscordMessage = namedtuple("DiscordMessage", ["channel_id", "content", "embed"])
 
 
-def send_messages_to_channel(channel_id: int, messages: List[DiscordMessage]) -> None:
+def send_messages_to_channels(messages: List[DiscordMessage]) -> None:
     """Send messages to Discord channel"""
     for message in messages:
         with grpc.insecure_channel("localhost:50051") as grpc_channel:
             client = DiscordApiStub(grpc_channel)
             request = SendChannelMessageRequest(
-                content=message.content, channel_id=channel_id, embed=message.embed
+                content=message.content,
+                channel_id=message.channel_id,
+                embed=message.embed,
             )
             try:
                 client.SendChannelMessage(request)
