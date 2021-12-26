@@ -27,10 +27,10 @@ class DiscordError(Exception):
 
 def get_text_channels() -> Iterable:
     """Get all text channels."""
-    return _get_channels(channel_type=Channel.Type.GUILD_TEXT)
+    return [obj for obj in get_channels() if obj.type == Channel.Type.GUILD_TEXT]
 
 
-def _get_channels(channel_type=None) -> Iterable:
+def get_channels() -> Iterable:
     with grpc.insecure_channel("localhost:50051") as channel:
         client = DiscordApiStub(channel)
         request = GetGuildChannelsRequest(guild_id=int(settings.DISCORD_GUILD_ID))
@@ -39,10 +39,7 @@ def _get_channels(channel_type=None) -> Iterable:
         except grpc.RpcError as ex:
             error_text = _log_grpc_error(ex)
             raise DiscordError(error_text)
-    channels = response.channels
-    if channel_type:
-        return [obj for obj in response.channels if obj.type == channel_type]
-    return channels
+    return response.channels
 
 
 def create_channel_message(

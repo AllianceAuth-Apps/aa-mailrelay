@@ -1,16 +1,47 @@
+from collections import defaultdict
+
 from django.conf import settings
 from django.contrib import admin
-from django.db.models.functions import Lower
+from django.forms import ModelForm
 from django.utils.html import format_html
 
 from . import __title__
 from .core.discord import create_channel_message
-from .models import DiscordChannel, RelayConfig
+from .models import DiscordCategory, DiscordChannel, RelayConfig
+
+
+class RelayConfigForm(ModelForm):
+    class Meta:
+        model = RelayConfig
+        fields = (
+            "character",
+            "mail_category",
+            "discord_channel",
+            "ping_type",
+            "is_enabled",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        channel_choices = self._generate_choices_for_discord_channel()
+        self.fields["discord_channel"].choices = channel_choices.items()
+
+    @staticmethod
+    def _generate_choices_for_discord_channel() -> dict:
+        channel_choices = defaultdict(list)
+        for obj in DiscordChannel.objects.select_related("category").order_by(
+            "category__name", "name"
+        ):
+            category_name = obj.category.name if obj.category else None
+            channel_choices[category_name].append((obj.pk, obj.name))
+        return channel_choices
 
 
 @admin.register(RelayConfig)
 class RelayConfigAdmin(admin.ModelAdmin):
     change_list_template = "admin/mailrelay/relayconfig/change_list.html"
+    form = RelayConfigForm
     list_display = (
         "__str__",
         "character",
@@ -21,6 +52,10 @@ class RelayConfigAdmin(admin.ModelAdmin):
         "last_relay_at",
         "_is_service_up",
     )
+
+    actions = ["send_test_message"]
+
+    autocomplete_fields = ["character"]
 
     @admin.display(ordering="discord_channel")
     def _channel(self, obj) -> str:
@@ -42,8 +77,6 @@ class RelayConfigAdmin(admin.ModelAdmin):
             eve_character.alliance_name if eve_character.alliance_name else "",
         )
 
-    actions = ["send_test_message"]
-
     @admin.action(description="Send test message for selected configurations")
     def send_test_message(self, request, queryset):
         items_count = 0
@@ -55,25 +88,25 @@ class RelayConfigAdmin(admin.ModelAdmin):
             items_count += 1
         self.message_user(request, f"Submitted {items_count} test message(s).")
 
-    autocomplete_fields = ["character"]
-    fields = (
-        "character",
-        "mail_category",
-        "discord_channel",
-        "ping_type",
-        "is_enabled",
-    )
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "discord_channel":
-            kwargs["queryset"] = DiscordChannel.objects.order_by(Lower("name"))
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
 
 if settings.DEBUG:
 
     @admin.register(DiscordChannel)
     class DiscordChannelAdmin(admin.ModelAdmin):
+        list_display = ("id", "name", "category")
+        list_display_links = None
+        list_select_related = True
+        search_fields = ("name",)
+        ordering = ("name",)
+
+        def has_add_permission(self, *args, **kwargs) -> bool:
+            return False
+
+        def has_change_permission(self, *args, **kwargs) -> bool:
+            return False
+
+    @admin.register(DiscordCategory)
+    class DiscordCategoryAdmin(admin.ModelAdmin):
         list_display = ("id", "name")
         list_display_links = None
         search_fields = ("name",)

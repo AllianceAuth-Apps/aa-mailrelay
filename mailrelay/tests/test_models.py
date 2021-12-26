@@ -6,9 +6,11 @@ from pytz import utc
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..models import DiscordChannel, RelayConfig
+from ..core.discord import Channel
+from ..models import DiscordCategory, DiscordChannel, RelayConfig
 from .data_factory import (
     create_character_mail,
+    create_discord_category,
     create_discord_channel,
     create_discordproxy_channel,
     create_eve_entities_from_evecharacter,
@@ -229,13 +231,16 @@ class TestRelayConfigOther(NoSocketsTestCase):
         self.assertFalse(result)
 
 
-@patch(MANAGERS_PATH + ".get_text_channels", spec=True)
+@patch(MANAGERS_PATH + ".get_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
-    def test_should_create_new_channels_from_scratch(self, mock_get_text_channels):
+    def test_should_create_new_channels_and_categories(self, mock_get_channels):
         # given
-        mock_get_text_channels.return_value = [
+        mock_get_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
-            create_discordproxy_channel(id=2, name="bravo"),
+            create_discordproxy_channel(id=2, name="bravo", parent_id=3),
+            create_discordproxy_channel(
+                id=3, name="zulu", type=Channel.Type.GUILD_CATEGORY
+            ),
         ]
         # when
         result = DiscordChannel.objects.sync()
@@ -244,16 +249,22 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         self.assertEqual(DiscordChannel.objects.count(), 2)
         obj = DiscordChannel.objects.get(id=1)
         self.assertEqual(obj.name, "alpha")
+        self.assertIsNone(obj.category)
         obj = DiscordChannel.objects.get(id=2)
         self.assertEqual(obj.name, "bravo")
+        self.assertEqual(obj.category.name, "zulu")
 
-    def test_should_update_existing_channels(self, mock_get_text_channels):
+    def test_should_update_existing_channels_and_categores(self, mock_get_channels):
         # given
-        mock_get_text_channels.return_value = [
+        mock_get_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
-            create_discordproxy_channel(id=2, name="bravo"),
+            create_discordproxy_channel(id=2, name="bravo", parent_id=3),
+            create_discordproxy_channel(
+                id=3, name="zulu", type=Channel.Type.GUILD_CATEGORY
+            ),
         ]
         create_discord_channel(id=1, name="update-me")
+        create_discord_category(id=3, name="update-me")
         # when
         result = DiscordChannel.objects.sync()
         # then
@@ -263,14 +274,17 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         self.assertEqual(obj.name, "alpha")
         obj = DiscordChannel.objects.get(id=2)
         self.assertEqual(obj.name, "bravo")
+        obj = DiscordCategory.objects.get(id=3)
+        self.assertEqual(obj.name, "zulu")
 
-    def test_should_remove_obsolete_channels(self, mock_get_text_channels):
+    def test_should_remove_obsolete_channels_and_categories(self, mock_get_channels):
         # given
-        mock_get_text_channels.return_value = [
+        mock_get_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo"),
         ]
         create_discord_channel(id=3, name="delete-me")
+        create_discord_category(id=4, name="delete-me")
         # when
         result = DiscordChannel.objects.sync()
         # then
@@ -280,3 +294,4 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         self.assertEqual(obj.name, "alpha")
         obj = DiscordChannel.objects.get(id=2)
         self.assertEqual(obj.name, "bravo")
+        self.assertFalse(DiscordCategory.objects.filter(id=4).exists())

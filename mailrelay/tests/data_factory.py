@@ -9,7 +9,7 @@ from pytz import utc
 from django.contrib.auth.models import User
 from eveuniverse.models import EveEntity
 
-from ..models import DiscordChannel, RelayConfig
+from ..models import DiscordCategory, DiscordChannel, RelayConfig
 
 
 def id_generator() -> int:
@@ -89,6 +89,11 @@ def create_relay_config(**kwargs):
 def create_discord_channel(**kwargs):
     kwargs["id"] = next(unique_ids)
     return DiscordChannel.objects.create(**kwargs)
+
+
+def create_discord_category(**kwargs):
+    kwargs["id"] = next(unique_ids)
+    return DiscordCategory.objects.create(**kwargs)
 
 
 def create_discordproxy_channel(**kwargs) -> Channel:

@@ -158,9 +158,25 @@ class RelayConfig(models.Model):
 class DiscordChannel(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=255, db_index=True)
+    category = models.ForeignKey(
+        "DiscordCategory",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="channels",
+    )
     last_update_at = models.DateTimeField(auto_now=True)
 
     objects = DiscordChannelManager()
+
+    def __str__(self) -> str:
+        return str(self.name)
+
+
+class DiscordCategory(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    name = models.CharField(max_length=255, db_index=True)
+    last_update_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
         return str(self.name)

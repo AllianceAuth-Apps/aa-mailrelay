@@ -41,7 +41,7 @@ setup(
     install_requires=[
         "allianceauth>=2.9",
         "aa-memberaudit",
-        "discordproxy",
+        "discordproxy>=0.3",
         "allianceauth-app-utils",
     ],
 )

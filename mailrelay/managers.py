@@ -1,6 +1,6 @@
 from django.db import models
 
-from .core.discord import get_text_channels
+from .core.discord import Channel, get_channels
 
 
 class DiscordChannelManager(models.Manager):
@@ -9,10 +9,28 @@ class DiscordChannelManager(models.Manager):
 
         Return the number of channels.
         """
+        from .models import DiscordCategory
+
+        channels = get_channels()
+        categories = {
+            obj.id: obj for obj in channels if obj.type == Channel.Type.GUILD_CATEGORY
+        }
+        for category in categories.values():
+            DiscordCategory.objects.update_or_create(
+                id=category.id, defaults={"name": category.name}
+            )
         channel_ids = set()
-        channels = get_text_channels()
-        for channel in channels:
-            self.update_or_create(id=channel.id, defaults={"name": channel.name})
+        text_channels = [obj for obj in channels if obj.type == Channel.Type.GUILD_TEXT]
+        for channel in text_channels:
+            if channel.parent_id and channel.parent_id in categories:
+                category_id = channel.parent_id
+            else:
+                category_id = None
+            self.update_or_create(
+                id=channel.id,
+                defaults={"name": channel.name, "category_id": category_id},
+            )
             channel_ids.add(channel.id)
         self.exclude(id__in=channel_ids).delete()
-        return len(channels)
+        DiscordCategory.objects.filter(channels__isnull=True).delete()
+        return len(text_channels)
