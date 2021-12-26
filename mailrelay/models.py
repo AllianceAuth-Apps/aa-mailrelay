@@ -138,7 +138,8 @@ class RelayConfig(models.Model):
         chunks_count = len(description_chunks)
         embeds = []
         for num, description_chunk in enumerate(description_chunks, start=1):
-            footer_text = f"{num}/{chunks_count}" if chunks_count > 1 else ""
+            footer_text = "Eve Mail"
+            footer_text += f" {num}/{chunks_count}" if chunks_count > 1 else ""
             title = mail.subject if num == 1 else ""
             embeds.append(
                 Embed(
@@ -157,7 +158,7 @@ class RelayConfig(models.Model):
 
 class DiscordChannel(models.Model):
     id = models.BigIntegerField(primary_key=True)
-    name = models.CharField(max_length=255, db_index=True)
+    name = models.CharField(max_length=100, db_index=True)
     category = models.ForeignKey(
         "DiscordCategory",
         on_delete=models.SET_DEFAULT,
@@ -170,12 +171,14 @@ class DiscordChannel(models.Model):
     objects = DiscordChannelManager()
 
     def __str__(self) -> str:
+        if self.category:
+            return f"{self.category.name} / {self.name}"
         return str(self.name)
 
 
 class DiscordCategory(models.Model):
     id = models.BigIntegerField(primary_key=True)
-    name = models.CharField(max_length=255, db_index=True)
+    name = models.CharField(max_length=100, db_index=True)
     last_update_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
