@@ -14,6 +14,8 @@ class RelayConfigAdmin(admin.ModelAdmin):
     list_display = (
         "__str__",
         "character",
+        "_organization",
+        "mail_category",
         "_channel",
         "is_enabled",
         "last_relay_at",
@@ -31,6 +33,14 @@ class RelayConfigAdmin(admin.ModelAdmin):
     @admin.display(boolean=True)
     def _is_service_up(self, obj) -> bool:
         return obj.is_service_up
+
+    def _organization(self, obj) -> str:
+        eve_character = obj.character.character_ownership.character
+        return format_html(
+            "{}<br>{}",
+            eve_character.corporation_name,
+            eve_character.alliance_name if eve_character.alliance_name else "",
+        )
 
     actions = ["send_test_message"]
 
