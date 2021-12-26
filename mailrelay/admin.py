@@ -2,6 +2,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.utils.html import format_html
 
+from . import __title__
+from .core.discord import create_channel_message
 from .models import DiscordChannel, RelayConfig
 
 
@@ -28,6 +30,19 @@ class RelayConfigAdmin(admin.ModelAdmin):
     @admin.display(boolean=True)
     def _is_service_up(self, obj) -> bool:
         return obj.is_service_up
+
+    actions = ["send_test_message"]
+
+    @admin.action(description="Send test message for selected configurations")
+    def send_test_message(self, request, queryset):
+        items_count = 0
+        for obj in queryset:
+            create_channel_message(
+                channel_id=obj.discord_channel.id,
+                content=f"Test message from {__title__}",
+            )
+            items_count += 1
+        self.message_user(request, f"Submitted {items_count} test message(s).")
 
     autocomplete_fields = ["character"]
     fields = (

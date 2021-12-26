@@ -4,7 +4,7 @@ from django.test import RequestFactory
 
 from app_utils.testing import NoSocketsTestCase
 
-from ..core.discord import DiscordProxyFetchingChannelsFailed
+from ..core.discord import DiscordError
 from ..views import admin_update_discord_channels
 from .data_factory import create_superuser
 
@@ -28,7 +28,7 @@ class TestViews(NoSocketsTestCase):
 
     def test_should_post_warning_message(self, mock_messages, mock_sync):
         # given
-        mock_sync.side_effect = DiscordProxyFetchingChannelsFailed
+        mock_sync.side_effect = DiscordError
         factory = RequestFactory()
         request = factory.get("/mailrelay/admin_update_discord_channels/")
         request.user = create_superuser(username="Clark Kent")

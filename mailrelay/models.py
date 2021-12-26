@@ -13,7 +13,7 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS, MAILRELAY_RELAY_GRACE_MINUTES
-from .core.discord import DiscordMessage, send_messages_to_channels
+from .core.discord import create_channel_message
 from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
 from .utils import chunks_by_lines
@@ -110,12 +110,11 @@ class RelayConfig(models.Model):
         messages = []
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
-            messages.append(
-                DiscordMessage(
-                    channel_id=self.discord_channel.id, content=content, embed=embed
-                )
+            messages.append((content, embed))
+        for message in messages:
+            create_channel_message(
+                channel_id=self.discord_channel.id, content=message[0], embed=message[1]
             )
-        send_messages_to_channels(messages=messages)
         self.mails_sent.add(mail)
 
     def _content_with_mentions(self) -> str:

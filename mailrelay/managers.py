@@ -1,6 +1,6 @@
 from django.db import models
 
-from .core.discord import fetch_text_channels
+from .core.discord import get_text_channels
 
 
 class DiscordChannelManager(models.Manager):
@@ -10,7 +10,7 @@ class DiscordChannelManager(models.Manager):
         Return the number of channels.
         """
         channel_ids = set()
-        channels = fetch_text_channels()
+        channels = get_text_channels()
         for channel in channels:
             self.update_or_create(id=channel.id, defaults={"name": channel.name})
             channel_ids.add(channel.id)

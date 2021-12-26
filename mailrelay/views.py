@@ -3,7 +3,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
-from .core.discord import DiscordProxyFetchingChannelsFailed
+from .core.discord import DiscordError
 from .models import DiscordChannel
 
 
@@ -15,6 +15,6 @@ def admin_update_discord_channels(request):
         messages.success(
             request, f"Successfully updated {channels_count} channels from Discord."
         )
-    except DiscordProxyFetchingChannelsFailed as ex:
+    except DiscordError as ex:
         messages.warning(request, f"Failed to fetch channels from Discord: {ex}")
     return redirect("admin:mailrelay_relayconfig_changelist")

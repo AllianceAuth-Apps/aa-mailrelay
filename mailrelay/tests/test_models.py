@@ -151,25 +151,25 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         )
         create_eve_entity(id=1002, name="Peter Parker")
 
-    @patch(MODELS_PATH + ".send_messages_to_channels")
-    def test_should_send_valid_mail(self, mock_send_messages_to_channels):
+    @patch(MODELS_PATH + ".create_channel_message")
+    def test_should_send_valid_mail(self, mock_create_channel_message):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002)
         config = create_relay_config(character=self.character)
         # when
         config.send_mail(mail)
         # then
-        self.assertTrue(mock_send_messages_to_channels.called)
+        self.assertTrue(mock_create_channel_message.called)
 
-    @patch(MODELS_PATH + ".send_messages_to_channels")
-    def test_should_not_send_mail_without_body(self, mock_send_messages_to_channels):
+    @patch(MODELS_PATH + ".create_channel_message")
+    def test_should_not_send_mail_without_body(self, mock_create_channel_message):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002, body="")
         config = create_relay_config(character=self.character)
         # when
         config.send_mail(mail)
         # then
-        self.assertFalse(mock_send_messages_to_channels.called)
+        self.assertFalse(mock_create_channel_message.called)
 
 
 class TestRelayConfigOther(NoSocketsTestCase):
@@ -229,11 +229,11 @@ class TestRelayConfigOther(NoSocketsTestCase):
         self.assertFalse(result)
 
 
-@patch(MANAGERS_PATH + ".fetch_text_channels", spec=True)
+@patch(MANAGERS_PATH + ".get_text_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
-    def test_should_create_new_channels_from_scratch(self, mock_fetch_text_channels):
+    def test_should_create_new_channels_from_scratch(self, mock_get_text_channels):
         # given
-        mock_fetch_text_channels.return_value = [
+        mock_get_text_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo"),
         ]
@@ -247,9 +247,9 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         obj = DiscordChannel.objects.get(id=2)
         self.assertEqual(obj.name, "bravo")
 
-    def test_should_update_existing_channels(self, mock_fetch_text_channels):
+    def test_should_update_existing_channels(self, mock_get_text_channels):
         # given
-        mock_fetch_text_channels.return_value = [
+        mock_get_text_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo"),
         ]
@@ -264,9 +264,9 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         obj = DiscordChannel.objects.get(id=2)
         self.assertEqual(obj.name, "bravo")
 
-    def test_should_remove_obsolete_channels(self, mock_fetch_text_channels):
+    def test_should_remove_obsolete_channels(self, mock_get_text_channels):
         # given
-        mock_fetch_text_channels.return_value = [
+        mock_get_text_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo"),
         ]
