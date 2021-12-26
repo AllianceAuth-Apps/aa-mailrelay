@@ -157,7 +157,7 @@ class RelayConfig(models.Model):
 
 class DiscordChannel(models.Model):
     id = models.BigIntegerField(primary_key=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     last_update_at = models.DateTimeField(auto_now=True)
 
     objects = DiscordChannelManager()
