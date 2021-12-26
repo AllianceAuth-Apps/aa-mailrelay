@@ -92,3 +92,4 @@ Note that all settings are optional and the app will use the documented default 
 Name | Description | Default
 -- | -- | --
 `MAILRELAY_OLDEST_MAIL_HOURS`| Oldest mail to be forwarded in hours. | `2`
+`MAILRELAY_RELAY_GRACE_MINUTES`| Max time in minutes since last successful relay before config is reported as down. | `30`
