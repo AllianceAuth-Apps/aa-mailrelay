@@ -43,7 +43,5 @@ setup(
         "aa-memberaudit",
         "discordproxy",
         "allianceauth-app-utils",
-        "django-eveuniverse",
-        "django-multiselectfield",
     ],
 )

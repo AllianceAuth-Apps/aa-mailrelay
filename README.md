@@ -35,7 +35,6 @@ Please make sure you have the following applications installed and running befor
 
 - [Alliance Auth](https://allianceauth.readthedocs.io/en/latest/installation/auth/allianceauth/)
 - [AA Discord service](https://allianceauth.readthedocs.io/en/v2.9.3/features/services/discord.html)
-- [Eve Universe](https://gitlab.com/ErikKalkoken/django-eveuniverse)
 - [Member Audit](https://gitlab.com/ErikKalkoken/aa-memberaudit)
 - [Discord Proxy](https://gitlab.com/ErikKalkoken/discordproxy)
 
