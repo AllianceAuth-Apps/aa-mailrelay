@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.db.models.functions import Lower
 from django.utils.html import format_html
 
 from . import __title__
@@ -52,6 +53,11 @@ class RelayConfigAdmin(admin.ModelAdmin):
         "ping_type",
         "is_enabled",
     )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "discord_channel":
+            kwargs["queryset"] = DiscordChannel.objects.order_by(Lower("name"))
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 if settings.DEBUG:
