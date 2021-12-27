@@ -4,15 +4,10 @@ from discordproxy.discord_api_pb2 import Channel, Embed
 
 from app_utils.testing import NoSocketsTestCase
 
-from ..core.discord import (
-    DiscordError,
-    Message,
-    create_channel_message,
-    get_text_channels,
-)
+from ..core.discord_client import DiscordClient, DiscordError, Message
 from .data_factory import create_discordproxy_channel, create_rpc_error
 
-MODULE_PATH = "mailrelay.core.discord"
+MODULE_PATH = "mailrelay.core.discord_client"
 
 
 @patch(MODULE_PATH + ".DiscordApiStub")
@@ -35,8 +30,9 @@ class TestFetchChannels(NoSocketsTestCase):
             ),
         ]
         mock_DiscordApiStub.return_value.GetGuildChannels.return_value = response
+        client = DiscordClient()
         # when
-        result = get_text_channels()
+        result = client.get_text_channels()
         # then
         channel_ids = {obj.id for obj in result}
         self.assertSetEqual(channel_ids, {1, 2})
@@ -45,9 +41,10 @@ class TestFetchChannels(NoSocketsTestCase):
         # given
         error = create_rpc_error()
         mock_DiscordApiStub.return_value.GetGuildChannels.side_effect = error
+        client = DiscordClient()
         # when/then
         with self.assertRaises(DiscordError):
-            get_text_channels()
+            client.get_text_channels()
 
 
 @patch(MODULE_PATH + ".DiscordApiStub")
@@ -61,8 +58,9 @@ class TestCreateChannelMessage(NoSocketsTestCase):
         mock_DiscordApiStub.return_value.SendChannelMessage.return_value.message = (
             message
         )
+        client = DiscordClient()
         # when
-        result = create_channel_message(
+        result = client.create_channel_message(
             channel_id=message.channel_id,
             content=message.content,
             embed=message.embeds[0],
@@ -74,13 +72,16 @@ class TestCreateChannelMessage(NoSocketsTestCase):
         # given
         error = create_rpc_error()
         mock_DiscordApiStub.return_value.SendChannelMessage.side_effect = error
+        client = DiscordClient()
         # when/then
         with self.assertRaises(DiscordError):
-            create_channel_message(channel_id=1, content="alpha")
+            client.create_channel_message(channel_id=1, content="alpha")
 
     def test_should_require_content_or_embed(
         self, mock_insecure_channel, mock_DiscordApiStub
     ):
+        # given
+        client = DiscordClient()
         # when/then
         with self.assertRaises(ValueError):
-            create_channel_message(channel_id=1)
+            client.create_channel_message(channel_id=1)

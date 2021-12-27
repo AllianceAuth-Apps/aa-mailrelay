@@ -14,7 +14,7 @@ from app_utils.urls import static_file_absolute_url
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS, MAILRELAY_RELAY_GRACE_MINUTES
-from .core.discord import create_channel_message
+from .core.discord_client import DiscordClient
 from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
 from .utils import chunks_by_lines
@@ -107,10 +107,11 @@ class RelayConfig(models.Model):
             return
         if not self.discord_channel:
             raise ValueError(f"No channel configured for config {self}")
+        client = DiscordClient()
         embeds = self._generate_embeds(mail)
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
-            create_channel_message(
+            client.create_channel_message(
                 channel_id=self.discord_channel.id, content=content, embed=embed
             )
         self.mails_sent.add(mail)

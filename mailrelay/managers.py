@@ -1,6 +1,6 @@
 from django.db import models
 
-from .core.discord import Channel, get_channels
+from .core.discord_client import Channel, DiscordClient
 
 
 class DiscordChannelManager(models.Manager):
@@ -11,7 +11,8 @@ class DiscordChannelManager(models.Manager):
         """
         from .models import DiscordCategory
 
-        channels = get_channels()
+        client = DiscordClient()
+        channels = client.get_channels()
         categories = {
             obj.id: obj for obj in channels if obj.type == Channel.Type.GUILD_CATEGORY
         }

@@ -4,7 +4,7 @@ from django.test import RequestFactory
 
 from app_utils.testing import NoSocketsTestCase
 
-from ..core.discord import DiscordError
+from ..core.discord_client import DiscordError
 from ..views import admin_update_discord_channels
 from .data_factory import create_superuser
 

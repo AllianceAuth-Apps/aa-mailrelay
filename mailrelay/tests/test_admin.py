@@ -56,7 +56,7 @@ class TestRelayConfigAdmin(TestCase):
         self.assertEqual(result, "Wayne Technologies Inc.<br>Wayne Enterprises")
 
     @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_MODULE + ".create_channel_message")
+    @patch(ADMIN_MODULE + ".DiscordClient.create_channel_message")
     def test_action_send_test_message(
         self, mock_create_channel_message, mock_message_user
     ):

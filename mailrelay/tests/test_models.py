@@ -6,7 +6,7 @@ from pytz import utc
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..core.discord import Channel
+from ..core.discord_client import Channel
 from ..models import DiscordCategory, DiscordChannel, RelayConfig
 from .data_factory import (
     create_character_mail,
@@ -142,7 +142,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         self.assertSetEqual({new_mail.pk}, set(result.values_list("pk", flat=True)))
 
 
-@patch(MODELS_PATH + ".create_channel_message")
+@patch(MODELS_PATH + ".DiscordClient.create_channel_message")
 class TestRelayConfigSendMail(NoSocketsTestCase):
     @classmethod
     def setUpClass(cls):
@@ -242,7 +242,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
         self.assertFalse(result)
 
 
-@patch(MANAGERS_PATH + ".get_channels", spec=True)
+@patch(MANAGERS_PATH + ".DiscordClient.get_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
     def test_should_create_new_channels_and_categories(self, mock_get_channels):
         # given

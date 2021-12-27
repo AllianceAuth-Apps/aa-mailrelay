@@ -6,7 +6,7 @@ from django.forms import ModelForm
 from django.utils.html import format_html
 
 from . import __title__
-from .core.discord import create_channel_message
+from .core.discord_client import DiscordClient
 from .models import DiscordCategory, DiscordChannel, RelayConfig
 
 
@@ -83,8 +83,9 @@ class RelayConfigAdmin(admin.ModelAdmin):
     @admin.action(description="Send test message for selected configurations")
     def send_test_message(self, request, queryset):
         items_count = 0
+        client = DiscordClient()
         for obj in queryset:
-            create_channel_message(
+            client.create_channel_message(
                 channel_id=obj.discord_channel.id,
                 content=f"Test message from {__title__}",
             )
