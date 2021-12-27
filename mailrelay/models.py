@@ -41,11 +41,11 @@ class RelayConfig(models.Model):
         default=True,
         help_text="Toogle for activating or deactivating relaying mails.",
     )
-    last_relay_at = models.DateTimeField(
+    last_service_run_at = models.DateTimeField(
         null=True,
         default=None,
         editable=False,
-        help_text="Time of last successful relay.",
+        help_text="Time of last successful service run.",
     )
     mail_category = models.CharField(
         max_length=2,
@@ -71,9 +71,9 @@ class RelayConfig(models.Model):
 
     @property
     def is_service_up(self) -> bool:
-        if not self.last_relay_at:
+        if not self.last_service_run_at:
             return False
-        return now() - self.last_relay_at < dt.timedelta(
+        return now() - self.last_service_run_at < dt.timedelta(
             minutes=MAILRELAY_RELAY_GRACE_MINUTES
         )
 
@@ -158,9 +158,10 @@ class RelayConfig(models.Model):
             )
         return embeds
 
-    def record_successful_relay(self):
-        self.last_relay_at = now()
-        self.save(update_fields=["last_relay_at"])
+    def record_service_run(self):
+        """Record successful service run."""
+        self.last_service_run_at = now()
+        self.save(update_fields=["last_service_run_at"])
 
 
 class DiscordChannel(models.Model):

@@ -49,7 +49,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
         "mail_category",
         "_channel",
         "is_enabled",
-        "last_relay_at",
+        "last_service_run_at",
         "_is_service_up",
     )
 

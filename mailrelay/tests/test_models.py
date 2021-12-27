@@ -192,24 +192,24 @@ class TestRelayConfigOther(NoSocketsTestCase):
         user = create_fake_user(1001, "Bruce Wayne")
         cls.character = add_memberaudit_character_to_user(user, 1001)
 
-    def test_should_record_successful_relay(self):
+    def test_should_record_service_run(self):
         config = create_relay_config(character=self.character)
         my_now = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = my_now
-            config.record_successful_relay()
+            config.record_service_run()
         # then
         config.refresh_from_db()
         self.assertAlmostEqual(
-            config.last_relay_at, my_now, delta=dt.timedelta(seconds=30)
+            config.last_service_run_at, my_now, delta=dt.timedelta(seconds=30)
         )
 
     @patch(MODELS_PATH + ".MAILRELAY_RELAY_GRACE_MINUTES", 30)
     def test_should_report_as_up(self):
         config = create_relay_config(
             character=self.character,
-            last_relay_at=dt.datetime(2021, 12, 24, 12, 15, tzinfo=utc),
+            last_service_run_at=dt.datetime(2021, 12, 24, 12, 15, tzinfo=utc),
         )
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
@@ -222,7 +222,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
     def test_should_report_as_down_1(self):
         config = create_relay_config(
             character=self.character,
-            last_relay_at=dt.datetime(2021, 12, 24, 11, 55, tzinfo=utc),
+            last_service_run_at=dt.datetime(2021, 12, 24, 11, 55, tzinfo=utc),
         )
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
@@ -233,7 +233,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
 
     @patch(MODELS_PATH + ".MAILRELAY_RELAY_GRACE_MINUTES", 30)
     def test_should_report_as_down_2(self):
-        config = create_relay_config(character=self.character, last_relay_at=None)
+        config = create_relay_config(character=self.character, last_service_run_at=None)
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)

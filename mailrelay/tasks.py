@@ -50,6 +50,7 @@ def forward_new_mails_for_config(config_pk):
     ).get(pk=config_pk)
     new_mails_qs = config.new_mails_queryset()
     if not new_mails_qs.exists():
+        config.record_service_run()
         logger.debug("No new mails to forward.")
         return
     logger.info(
@@ -61,7 +62,7 @@ def forward_new_mails_for_config(config_pk):
         forward_mail_to_discord.si(config_pk=config_pk, mail_pk=mail.pk)
         for mail in new_mails_qs.order_by("timestamp")
     ]
-    my_tasks.append(record_successful_relay.si(config_pk))
+    my_tasks.append(record_service_run.si(config_pk))
     chain(my_tasks).delay()
 
 
@@ -76,7 +77,7 @@ def forward_mail_to_discord(config_pk, mail_pk):
 
 
 @shared_task
-def record_successful_relay(config_pk):
+def record_service_run(config_pk):
     """Record completion of successful relay."""
     config = RelayConfig.objects.get(pk=config_pk)
-    config.record_successful_relay()
+    config.record_service_run()
