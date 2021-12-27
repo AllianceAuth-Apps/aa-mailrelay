@@ -23,13 +23,13 @@ class RelayConfigForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         channel_choices = self._generate_choices_for_discord_channel()
         self.fields["discord_channel"].choices = channel_choices.items()
 
     @staticmethod
     def _generate_choices_for_discord_channel() -> dict:
         channel_choices = defaultdict(list)
+        channel_choices[None] = [(None, "---------")]
         for obj in DiscordChannel.objects.select_related("category").order_by(
             "category__name", "name"
         ):
