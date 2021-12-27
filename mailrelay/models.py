@@ -10,6 +10,7 @@ from django.utils.timezone import now
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.datetime import DATETIME_FORMAT
 from app_utils.logging import LoggerAddTag
+from app_utils.urls import static_file_absolute_url
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS, MAILRELAY_RELAY_GRACE_MINUTES
@@ -107,22 +108,27 @@ class RelayConfig(models.Model):
         if not self.discord_channel:
             raise ValueError(f"No channel configured for config {self}")
         embeds = self._generate_embeds(mail)
-        messages = []
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
-            messages.append((content, embed))
-        for message in messages:
             create_channel_message(
-                channel_id=self.discord_channel.id, content=message[0], embed=message[1]
+                channel_id=self.discord_channel.id, content=content, embed=embed
             )
         self.mails_sent.add(mail)
 
     def _content_with_mentions(self) -> str:
-        if self.ping_type is self.ChannelPingType.EVERYBODY:
-            return "@everybody"
-        if self.ping_type is self.ChannelPingType.HERE:
-            return "@here"
-        return ""
+        if self.ping_type == self.ChannelPingType.EVERYBODY:
+            mention = "@everybody "
+        elif self.ping_type == self.ChannelPingType.HERE:
+            mention = "@here "
+        else:
+            mention = ""
+        if self.mail_category == self.MailCategory.ALLIANCE:
+            title = "Alliance"
+        elif self.mail_category == self.MailCategory.CORPORATION:
+            title = "Corporation"
+        else:
+            title = "Eve"
+        return f"{mention}**New {title} Mail**"
 
     def _generate_embeds(self, mail: CharacterMail) -> List[Embed]:
         recipients = ", ".join(
@@ -136,14 +142,15 @@ class RelayConfig(models.Model):
         full_description += eve_xml_to_discord_markup(mail.body)
         description_chunks = chunks_by_lines(full_description, 3500)
         chunks_count = len(description_chunks)
+        footer_icon_url = static_file_absolute_url("mailrelay/mailrelay_logo.png")
         embeds = []
         for num, description_chunk in enumerate(description_chunks, start=1):
-            footer_text = "Eve Mail"
+            footer_text = __title__
             footer_text += f" {num}/{chunks_count}" if chunks_count > 1 else ""
             title = mail.subject if num == 1 else ""
             embeds.append(
                 Embed(
-                    footer=Embed.Footer(text=footer_text),
+                    footer=Embed.Footer(text=footer_text, icon_url=footer_icon_url),
                     description=description_chunk,
                     timestamp=mail.timestamp.isoformat(),
                     title=title,

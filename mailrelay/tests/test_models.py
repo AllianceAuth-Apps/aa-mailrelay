@@ -142,6 +142,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         self.assertSetEqual({new_mail.pk}, set(result.values_list("pk", flat=True)))
 
 
+@patch(MODELS_PATH + ".create_channel_message")
 class TestRelayConfigSendMail(NoSocketsTestCase):
     @classmethod
     def setUpClass(cls):
@@ -153,7 +154,6 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         )
         create_eve_entity(id=1002, name="Peter Parker")
 
-    @patch(MODELS_PATH + ".create_channel_message")
     def test_should_send_valid_mail(self, mock_create_channel_message):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002)
@@ -163,7 +163,6 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         # then
         self.assertTrue(mock_create_channel_message.called)
 
-    @patch(MODELS_PATH + ".create_channel_message")
     def test_should_not_send_mail_without_body(self, mock_create_channel_message):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002, body="")
@@ -172,6 +171,18 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         config.send_mail(mail)
         # then
         self.assertFalse(mock_create_channel_message.called)
+
+    def test_should_send_mail_with_everbody_ping(self, mock_create_channel_message):
+        # given
+        mail = create_character_mail(character=self.character, sender_id=1002)
+        config = create_relay_config(
+            character=self.character, ping_type=RelayConfig.ChannelPingType.EVERYBODY
+        )
+        # when
+        config.send_mail(mail)
+        # then
+        _, kwargs = mock_create_channel_message.call_args
+        self.assertIn("@everybody", kwargs["content"])
 
 
 class TestRelayConfigOther(NoSocketsTestCase):

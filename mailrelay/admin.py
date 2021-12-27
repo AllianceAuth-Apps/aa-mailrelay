@@ -55,6 +55,9 @@ class RelayConfigAdmin(admin.ModelAdmin):
 
     actions = ["send_test_message"]
 
+    if settings.DEBUG:
+        actions += ["resent_mails"]
+
     autocomplete_fields = ["character"]
 
     @admin.display(ordering="discord_channel")
@@ -87,6 +90,16 @@ class RelayConfigAdmin(admin.ModelAdmin):
             )
             items_count += 1
         self.message_user(request, f"Submitted {items_count} test message(s).")
+
+    @admin.action(description="Resend mails for selected configurations")
+    def resent_mails(self, request, queryset):
+        items_count = 0
+        for obj in queryset:
+            obj.mails_sent.clear()
+            for mail in obj.new_mails_queryset():
+                obj.send_mail(mail)
+            items_count += 1
+        self.message_user(request, f"Resending mails for {items_count} config(s).")
 
 
 if settings.DEBUG:
