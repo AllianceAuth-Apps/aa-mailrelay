@@ -12,6 +12,11 @@ from eveuniverse.models import EveEntity
 from ..models import DiscordCategory, DiscordChannel, RelayConfig
 
 
+class FakeRequest(object):
+    def __init__(self, user=None):
+        self.user = user
+
+
 def id_generator() -> int:
     seed = 1
     while True:
@@ -80,7 +85,8 @@ def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterM
 def create_relay_config(**kwargs):
     if "mail_category" not in kwargs:
         kwargs["mail_category"] = RelayConfig.MailCategory.ALL
-    kwargs["discord_channel"] = create_discord_channel(name="test")
+    if "discord_channel" not in kwargs:
+        kwargs["discord_channel"] = create_discord_channel(name="test")
     config = RelayConfig.objects.create(**kwargs)
 
     return config
@@ -120,3 +126,7 @@ def create_rpc_error():
         }
     )
     return error
+
+
+def create_fake_request(**kwargs):
+    return FakeRequest(**kwargs)
