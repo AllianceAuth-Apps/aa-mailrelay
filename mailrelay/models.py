@@ -1,6 +1,7 @@
 import datetime as dt
 from typing import List
 
+from discordproxy.client import DiscordClient
 from discordproxy.discord_api_pb2 import Embed
 from memberaudit.models import Character, CharacterMail
 
@@ -14,7 +15,6 @@ from app_utils.urls import static_file_absolute_url
 
 from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS, MAILRELAY_RELAY_GRACE_MINUTES
-from .core.discord_client import DiscordClient
 from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
 from .utils import chunks_by_lines

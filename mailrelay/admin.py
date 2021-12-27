@@ -1,12 +1,13 @@
 from collections import defaultdict
 
+from discordproxy.client import DiscordClient
+
 from django.conf import settings
 from django.contrib import admin
 from django.forms import ModelForm
 from django.utils.html import format_html
 
 from . import __title__
-from .core.discord_client import DiscordClient
 from .models import DiscordCategory, DiscordChannel, RelayConfig
 
 
@@ -52,6 +53,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
         "last_service_run_at",
         "_is_service_up",
     )
+    ordering = ("pk",)
 
     actions = ["send_test_message"]
 

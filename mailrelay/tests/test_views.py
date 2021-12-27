@@ -1,12 +1,13 @@
 from unittest.mock import patch
 
+from discordproxy.client import DiscordError
+
 from django.test import RequestFactory
 
 from app_utils.testing import NoSocketsTestCase
 
-from ..core.discord_client import DiscordError
 from ..views import admin_update_discord_channels
-from .data_factory import create_superuser
+from .factories import create_superuser
 
 VIEWS_PATH = "mailrelay.views"
 

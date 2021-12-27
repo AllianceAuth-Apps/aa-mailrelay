@@ -1,18 +1,18 @@
 import datetime as dt
 from unittest.mock import patch
 
+from discordproxy.client import Channel
+from discordproxy.tests.factories import create_discordproxy_channel
 from memberaudit.tests import add_memberaudit_character_to_user
 from pytz import utc
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..core.discord_client import Channel
 from ..models import DiscordCategory, DiscordChannel, RelayConfig
-from .data_factory import (
+from .factories import (
     create_character_mail,
     create_discord_category,
     create_discord_channel,
-    create_discordproxy_channel,
     create_eve_entities_from_evecharacter,
     create_eve_entity,
     create_relay_config,
@@ -242,7 +242,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
         self.assertFalse(result)
 
 
-@patch(MANAGERS_PATH + ".DiscordClient.get_channels", spec=True)
+@patch(MANAGERS_PATH + ".DiscordClient.get_guild_channels", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
     def test_should_create_new_channels_and_categories(self, mock_get_channels):
         # given

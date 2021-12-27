@@ -9,7 +9,7 @@ from app_utils.testing import create_fake_user
 
 from ..admin import RelayConfigAdmin
 from ..models import RelayConfig
-from .data_factory import (
+from .factories import (
     create_discord_category,
     create_discord_channel,
     create_fake_request,

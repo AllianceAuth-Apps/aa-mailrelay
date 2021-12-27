@@ -9,7 +9,7 @@ from django.test import override_settings
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
 from ..tasks import forward_new_mails, forward_new_mails_for_config
-from .data_factory import (
+from .factories import (
     create_character_mail,
     create_eve_entities_from_evecharacter,
     create_eve_entity,

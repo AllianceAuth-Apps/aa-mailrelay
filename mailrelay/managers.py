@@ -1,6 +1,7 @@
-from django.db import models
+from discordproxy.client import Channel, DiscordClient
 
-from .core.discord_client import Channel, DiscordClient
+from django.conf import settings
+from django.db import models
 
 
 class DiscordChannelManager(models.Manager):
@@ -11,8 +12,15 @@ class DiscordChannelManager(models.Manager):
         """
         from .models import DiscordCategory
 
+        try:
+            guild_id = int(settings.DISCORD_GUILD_ID)
+        except AttributeError:
+            raise ValueError(
+                "Can not find Discord guild ID in settings. "
+                "Is the Discord service configured?"
+            )
         client = DiscordClient()
-        channels = client.get_channels()
+        channels = client.get_guild_channels(guild_id)
         categories = {
             obj.id: obj for obj in channels if obj.type == Channel.Type.GUILD_CATEGORY
         }

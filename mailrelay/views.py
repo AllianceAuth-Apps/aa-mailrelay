@@ -1,9 +1,10 @@
+from discordproxy.client import DiscordError
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
-from .core.discord_client import DiscordError
 from .models import DiscordChannel
 
 
