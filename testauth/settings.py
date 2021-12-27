@@ -99,7 +99,6 @@ TEMPLATES = [
                 "django.template.context_processors.media",
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
-                "allianceauth.notifications.context_processors.user_notification_count",
                 "allianceauth.context_processors.auth_settings",
             ],
         },
@@ -308,6 +307,9 @@ DEFAULT_FROM_EMAIL = ""
 #######################################
 # Add any custom settings below here. #
 #######################################
+
+# workaround to prevent warning about missing default
+NOTIFICATIONS_MAX_PER_USER = 50
 
 # Discord service
 DISCORD_GUILD_ID = 42
