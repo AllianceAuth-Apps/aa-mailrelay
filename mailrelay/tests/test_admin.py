@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from discordproxy.client import DiscordProxyException
 from memberaudit.tests import add_memberaudit_character_to_user
 
 from django.contrib.admin.sites import AdminSite
@@ -71,6 +72,21 @@ class TestRelayConfigAdmin(TestCase):
             obj[1]["channel_id"] for obj in mock_create_channel_message.call_args_list
         }
         self.assertSetEqual(channel_ids, {config.discord_channel.pk})
+        self.assertTrue(mock_message_user.called)
+
+    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_MODULE + ".DiscordClient.create_channel_message")
+    def test_action_send_test_message_with_error(
+        self, mock_create_channel_message, mock_message_user
+    ):
+        # given
+        mock_create_channel_message.side_effect = DiscordProxyException
+        create_relay_config(character=self.character)
+        request = create_fake_request(user=self.admin_user)
+        queryset = RelayConfig.objects.all()
+        # when
+        self.modeladmin.send_test_message(request, queryset)
+        # then
         self.assertTrue(mock_message_user.called)
 
     def test_should_open_new_change_view(self):

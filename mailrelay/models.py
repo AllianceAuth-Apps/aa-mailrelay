@@ -101,7 +101,7 @@ class RelayConfig(models.Model):
             raise NotImplementedError(f"Unknown mail category: {self.mail_category}")
         return new_mails_qs
 
-    def send_mail(self, mail: CharacterMail):
+    def send_mail(self, mail: CharacterMail) -> None:
         """Send one mail to channel."""
         if not mail.body:
             return

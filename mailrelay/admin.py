@@ -1,14 +1,19 @@
 from collections import defaultdict
 
-from discordproxy.client import DiscordClient
+from discordproxy.client import DiscordClient, DiscordProxyException
 
 from django.conf import settings
 from django.contrib import admin
 from django.forms import ModelForm
 from django.utils.html import format_html
 
+from allianceauth.services.hooks import get_extension_logger
+from app_utils.logging import LoggerAddTag
+
 from . import __title__
 from .models import DiscordCategory, DiscordChannel, RelayConfig
+
+logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 class RelayConfigForm(ModelForm):
@@ -87,22 +92,35 @@ class RelayConfigAdmin(admin.ModelAdmin):
         items_count = 0
         client = DiscordClient()
         for obj in queryset:
-            client.create_channel_message(
-                channel_id=obj.discord_channel.id,
-                content=f"Test message from {__title__}",
-            )
-            items_count += 1
-        self.message_user(request, f"Submitted {items_count} test message(s).")
+            try:
+                client.create_channel_message(
+                    channel_id=obj.discord_channel.id,
+                    content=f"Test message from {__title__}",
+                )
+            except DiscordProxyException as ex:
+                logger.error("%s: Failed to send test message for", obj, exc_info=True)
+                self.message_user(
+                    request,
+                    f"{obj}: Failed to send test message for {ex}",
+                    level="ERROR",
+                )
+            else:
+                items_count += 1
+        self.message_user(
+            request, f"Submitted {items_count} successful test message(s)."
+        )
 
-    @admin.action(description="Resend mails for selected configurations")
-    def resent_mails(self, request, queryset):
-        items_count = 0
-        for obj in queryset:
-            obj.mails_sent.clear()
-            for mail in obj.new_mails_queryset():
-                obj.send_mail(mail)
-            items_count += 1
-        self.message_user(request, f"Resending mails for {items_count} config(s).")
+    if settings.DEBUG:
+
+        @admin.action(description="Resend mails for selected configurations")
+        def resent_mails(self, request, queryset):
+            items_count = 0
+            for obj in queryset:
+                obj.mails_sent.clear()
+                for mail in obj.new_mails_queryset():
+                    obj.send_mail(mail)
+                items_count += 1
+            self.message_user(request, f"Resending mails for {items_count} config(s).")
 
 
 if settings.DEBUG:

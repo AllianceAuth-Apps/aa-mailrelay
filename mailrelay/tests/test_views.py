@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from discordproxy.client import DiscordError
+from discordproxy.client import DiscordProxyException
 
 from django.test import RequestFactory
 
@@ -29,7 +29,7 @@ class TestViews(NoSocketsTestCase):
 
     def test_should_post_warning_message(self, mock_messages, mock_sync):
         # given
-        mock_sync.side_effect = DiscordError
+        mock_sync.side_effect = DiscordProxyException
         factory = RequestFactory()
         request = factory.get("/mailrelay/admin_update_discord_channels/")
         request.user = create_superuser(username="Clark Kent")
@@ -37,4 +37,4 @@ class TestViews(NoSocketsTestCase):
         response = admin_update_discord_channels(request)
         # then
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(mock_messages.warning.called)
+        self.assertTrue(mock_messages.error.called)
