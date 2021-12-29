@@ -103,14 +103,15 @@ class RelayConfigAdmin(admin.ModelAdmin):
                 logger.error("%s: Failed to send test message for", obj, exc_info=True)
                 self.message_user(
                     request,
-                    f"{obj}: Failed to send test message for {ex}",
-                    level="ERROR",
+                    f"{obj}: Failed to send test message: {ex}",
+                    level="WARNING",
                 )
             else:
                 items_count += 1
-        self.message_user(
-            request, f"Submitted {items_count} successful test message(s)."
-        )
+        if items_count:
+            self.message_user(
+                request, f"Submitted {items_count} successful test message(s)."
+            )
 
     if settings.DEBUG:
 
