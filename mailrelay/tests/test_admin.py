@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from discordproxy.client import DiscordProxyException
+from discordproxy.exceptions import DiscordProxyException
 from memberaudit.tests import add_memberaudit_character_to_user
 
 from django.contrib.admin.sites import AdminSite

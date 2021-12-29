@@ -101,13 +101,18 @@ class RelayConfig(models.Model):
             raise NotImplementedError(f"Unknown mail category: {self.mail_category}")
         return new_mails_qs
 
-    def send_mail(self, mail: CharacterMail) -> None:
-        """Send one mail to channel."""
+    def send_mail(self, mail: CharacterMail, timeout: int = None) -> None:
+        """Send one mail to channel.
+
+        Args:
+        - mail: mail to be sent
+        - timeout: timeout for request to Discord in seconds
+        """
         if not mail.body:
             return
         if not self.discord_channel:
             raise ValueError(f"No channel configured for config {self}")
-        client = DiscordClient()
+        client = DiscordClient(timeout=timeout)
         embeds = self._generate_embeds(mail)
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""

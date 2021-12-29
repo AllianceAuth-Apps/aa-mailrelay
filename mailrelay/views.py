@@ -1,4 +1,4 @@
-from discordproxy.client import DiscordProxyException
+from discordproxy.exceptions import DiscordProxyException
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -9,6 +9,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
+from .app_settings import MAILRELAY_DISCORD_USER_TIMEOUT
 from .models import DiscordChannel
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -18,7 +19,9 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 @staff_member_required
 def admin_update_discord_channels(request):
     try:
-        channels_count = DiscordChannel.objects.sync()
+        channels_count = DiscordChannel.objects.sync(
+            timeout=MAILRELAY_DISCORD_USER_TIMEOUT
+        )
         messages.success(
             request, f"Successfully updated {channels_count} channels from Discord."
         )

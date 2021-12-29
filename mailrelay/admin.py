@@ -1,6 +1,7 @@
 from collections import defaultdict
 
-from discordproxy.client import DiscordClient, DiscordProxyException
+from discordproxy.client import DiscordClient
+from discordproxy.exceptions import DiscordProxyException
 
 from django.conf import settings
 from django.contrib import admin
@@ -11,6 +12,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
+from .app_settings import MAILRELAY_DISCORD_USER_TIMEOUT
 from .models import DiscordCategory, DiscordChannel, RelayConfig
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -118,7 +120,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
             for obj in queryset:
                 obj.mails_sent.clear()
                 for mail in obj.new_mails_queryset():
-                    obj.send_mail(mail)
+                    obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
                 items_count += 1
             self.message_user(request, f"Resending mails for {items_count} config(s).")
 

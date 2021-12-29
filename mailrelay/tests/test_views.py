@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from discordproxy.client import DiscordProxyException
+from discordproxy.exceptions import DiscordProxyException
 
 from django.test import RequestFactory
 

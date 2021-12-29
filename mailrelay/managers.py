@@ -5,10 +5,14 @@ from django.db import models
 
 
 class DiscordChannelManager(models.Manager):
-    def sync(self) -> int:
+    def sync(self, timeout: int = None) -> int:
         """Synchronize list of guild channels objects with the Discord server.
 
-        Return the number of channels.
+        Args:
+        - timeout: timeout for request to Discord in seconds
+
+        Returns:
+        number of channels
         """
         from .models import DiscordCategory
 
@@ -19,7 +23,7 @@ class DiscordChannelManager(models.Manager):
                 "Can not find Discord guild ID in settings. "
                 "Is the Discord service configured?"
             )
-        client = DiscordClient()
+        client = DiscordClient(timeout=timeout)
         channels = client.get_guild_channels(guild_id)
         categories = {
             obj.id: obj for obj in channels if obj.type == Channel.Type.GUILD_CATEGORY

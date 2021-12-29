@@ -12,6 +12,7 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
+from .app_settings import MAILRELAY_DISCORD_TASK_TIMEOUT
 from .models import RelayConfig
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -73,7 +74,7 @@ def forward_mail_to_discord(config_pk, mail_pk):
         pk=config_pk
     )
     mail = config.character.mails.get(pk=mail_pk)
-    config.send_mail(mail=mail)
+    config.send_mail(mail=mail, timeout=MAILRELAY_DISCORD_TASK_TIMEOUT)
 
 
 @shared_task
