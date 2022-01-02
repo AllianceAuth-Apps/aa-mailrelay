@@ -20,7 +20,7 @@ MODELS_PATH = "mailrelay.models"
 TASKS_PATH = "mailrelay.tasks"
 
 
-@override_settings(CELERY_ALWAYS_EAGER=True)
+@override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 @patch(TASKS_PATH + ".update_character_mailing_lists", spec=True)
 @patch(TASKS_PATH + ".update_character_mail_labels", spec=True)
 @patch(TASKS_PATH + ".update_character_mail_headers", spec=True)
@@ -62,7 +62,7 @@ class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
         self.assertSetEqual({config_1001.pk, config_1002.pk}, called_config_pks)
 
 
-@override_settings(CELERY_ALWAYS_EAGER=True)
+@override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 @patch(MODELS_PATH + ".RelayConfig.send_mail")
 class TestForwardNewMailsOneConfig(NoSocketsTestCase):
     def test_should_forward_all_mails(self, mock_send_mail):
