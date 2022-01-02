@@ -1,4 +1,5 @@
 from celery import chain, shared_task
+from discordproxy.exceptions import DiscordProxyException
 from memberaudit.models import Character
 from memberaudit.tasks import (
     update_character_mail_bodies,
@@ -74,7 +75,15 @@ def forward_mail_to_discord(config_pk, mail_pk):
         pk=config_pk
     )
     mail = config.character.mails.get(pk=mail_pk)
-    config.send_mail(mail=mail, timeout=MAILRELAY_DISCORD_TASK_TIMEOUT)
+    try:
+        config.send_mail(mail=mail, timeout=MAILRELAY_DISCORD_TASK_TIMEOUT)
+    except DiscordProxyException as ex:
+        logger.error(
+            "%s: Failed to send mail %s due to error from Discord Proxy. Will try again later: %s",
+            config,
+            mail,
+            ex,
+        )
 
 
 @shared_task

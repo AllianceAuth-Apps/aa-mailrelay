@@ -1,6 +1,6 @@
 from app_utils.django import clean_setting
 
-MAILRELAY_DISCORD_TASK_TIMEOUT = clean_setting("MAILRELAY_DISCORD_TASK_TIMEOUT", 30)
+MAILRELAY_DISCORD_TASK_TIMEOUT = clean_setting("MAILRELAY_DISCORD_TASK_TIMEOUT", 60)
 """Timeout for asynchronous Discord requests in seconds."""
 
 MAILRELAY_DISCORD_USER_TIMEOUT = clean_setting("MAILRELAY_DISCORD_USER_TIMEOUT", 30)

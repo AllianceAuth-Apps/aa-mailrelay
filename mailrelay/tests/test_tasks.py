@@ -1,6 +1,7 @@
 import datetime as dt
 from unittest.mock import patch
 
+from discordproxy.exceptions import DiscordProxyTimeoutError, GrpcStatusCode
 from memberaudit.tests import add_memberaudit_character_to_user
 from pytz import utc
 
@@ -8,7 +9,11 @@ from django.test import override_settings
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..tasks import forward_new_mails, forward_new_mails_for_config
+from ..tasks import (
+    forward_mail_to_discord,
+    forward_new_mails,
+    forward_new_mails_for_config,
+)
 from .factories import (
     create_character_mail,
     create_eve_entities_from_evecharacter,
@@ -106,3 +111,39 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         mails_pk = {call[1]["mail"].pk for call in mock_send_mail.call_args_list}
         self.assertSetEqual(mails_pk, set())
         self.assertIsNotNone(config.last_service_run_at)
+
+
+@patch(MODELS_PATH + ".RelayConfig.send_mail")
+class TestForwardMailToDiscord(NoSocketsTestCase):
+    def test_should_send_mail(self, mock_send_mail):
+        # given
+        mock_send_mail.return_value = True
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        mail = create_character_mail(character=character, sender_id=1002)
+        config = create_relay_config(character=character)
+        # when
+        forward_mail_to_discord(config_pk=config.pk, mail_pk=mail.pk)
+        # then
+        self.assertEqual(mock_send_mail.call_count, 1)
+        _, kwargs = mock_send_mail.call_args
+        self.assertEqual(kwargs["mail"], mail)
+
+    def test_should_handle_discord_error(self, mock_send_mail):
+        # given
+        my_error = DiscordProxyTimeoutError(
+            status=GrpcStatusCode.DEADLINE_EXCEEDED, details="test"
+        )
+        mock_send_mail.side_effect = my_error
+        user = create_fake_user(1001, "Bruce Wayne")
+        character = add_memberaudit_character_to_user(user, 1001)
+        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        mail = create_character_mail(character=character, sender_id=1002)
+        config = create_relay_config(character=character)
+        # when
+        forward_mail_to_discord(config_pk=config.pk, mail_pk=mail.pk)
+        # then
+        pass
