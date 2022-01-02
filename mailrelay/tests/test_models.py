@@ -239,7 +239,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             result = config.is_service_up
         # then
-        self.assertFalse(result)
+        self.assertIsNone(result)
 
 
 @patch(MANAGERS_PATH + ".DiscordClient.get_guild_channels", spec=True)

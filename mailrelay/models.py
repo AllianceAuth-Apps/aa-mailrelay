@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import List
+from typing import List, Optional
 
 from discordproxy.client import DiscordClient
 from discordproxy.discord_api_pb2 import Embed
@@ -70,9 +70,9 @@ class RelayConfig(models.Model):
         return f"#{self.pk}"
 
     @property
-    def is_service_up(self) -> bool:
+    def is_service_up(self) -> Optional[bool]:
         if not self.last_service_run_at:
-            return False
+            return None
         return now() - self.last_service_run_at < dt.timedelta(
             minutes=MAILRELAY_RELAY_GRACE_MINUTES
         )
