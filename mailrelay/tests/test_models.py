@@ -182,7 +182,7 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         config.send_mail(mail)
         # then
         _, kwargs = mock_create_channel_message.call_args
-        self.assertIn("@everybody", kwargs["content"])
+        self.assertIn("@everyone", kwargs["content"])
 
 
 class TestRelayConfigOther(NoSocketsTestCase):

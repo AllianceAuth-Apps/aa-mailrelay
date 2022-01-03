@@ -37,4 +37,4 @@ class TestViews(NoSocketsTestCase):
         response = admin_update_discord_channels(request)
         # then
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(mock_messages.error.called)
+        self.assertTrue(mock_messages.warning.called)

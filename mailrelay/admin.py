@@ -120,10 +120,14 @@ class RelayConfigAdmin(admin.ModelAdmin):
             items_count = 0
             for obj in queryset:
                 obj.mails_sent.clear()
-                for mail in obj.new_mails_queryset():
+                new_mails_qs = obj.new_mails_queryset()
+                for mail in new_mails_qs:
                     obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
                 items_count += 1
-            self.message_user(request, f"Resending mails for {items_count} config(s).")
+            self.message_user(
+                request,
+                f"Resending {new_mails_qs.count()} mails for {items_count} config(s).",
+            )
 
 
 if settings.DEBUG:

@@ -21,6 +21,7 @@ setup(
     description="An app for relaying Eve mails to Discord",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    url="https://gitlab.com/ErikKalkoken/aa-mailrelay",
     author="Erik Kalkoken",
     author_email="kalkoken87@gmail.com",
     classifiers=[

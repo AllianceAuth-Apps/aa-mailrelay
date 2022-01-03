@@ -26,7 +26,7 @@ class RelayConfig(models.Model):
     class ChannelPingType(models.TextChoices):
         NONE = "PN", "(none)"
         HERE = "PH", "@here"
-        EVERYBODY = "PE", "@everybody"
+        EVERYBODY = "PE", "@everybody"  # TODO: Rename to EVERYONE with next migration
 
     class MailCategory(models.TextChoices):
         ALL = "AL", "All mails"
@@ -123,7 +123,7 @@ class RelayConfig(models.Model):
 
     def _content_with_mentions(self) -> str:
         if self.ping_type == self.ChannelPingType.EVERYBODY:
-            mention = "@everybody "
+            mention = "@everyone "
         elif self.ping_type == self.ChannelPingType.HERE:
             mention = "@here "
         else:
