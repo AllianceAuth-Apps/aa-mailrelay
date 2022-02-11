@@ -1,13 +1,20 @@
 from bs4 import BeautifulSoup
 
-from ..utils import is_string_an_url
+from eveuniverse.core import evexml
+
+from allianceauth.services.hooks import get_extension_logger
+from app_utils.logging import LoggerAddTag
+
+from .. import __title__
+
+logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 def eve_xml_to_discord_markup(xml_doc: str) -> str:
     """Converts Eve Online xml to Discord markup."""
+    xml_doc = evexml.unicode_to_utf8(xml_doc)
+    xml_doc = evexml.remove_loc_tag(xml_doc)
     soup = BeautifulSoup(xml_doc, "html.parser")
-    for element in soup.find_all("loc"):
-        element.unwrap()
     for element in soup.find_all("br"):
         element.replace_with("\n")
     for element in soup.find_all("b"):
@@ -17,10 +24,12 @@ def eve_xml_to_discord_markup(xml_doc: str) -> str:
     for element in soup.find_all("u"):
         element.replace_with(f"__{element.string}__")
     for element in soup.find_all("a"):
-        link = element["href"]
         text = element.string
-        if is_string_an_url(link):
-            element.replace_with(f"[{link}]({text})")
+        url = evexml.eve_link_to_url(element["href"])
+        if url:
+            element.replace_with(f"[{text}]({url})")
         else:
             element.replace_with(f"**{text}**")
-    return soup.get_text()
+    markup_text = soup.get_text()
+    logger.debug("Markdown text:\n%s", markup_text)
+    return markup_text

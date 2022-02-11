@@ -2,7 +2,7 @@ import datetime as dt
 from unittest.mock import patch
 
 from discordproxy.exceptions import DiscordProxyTimeoutError, GrpcStatusCode
-from memberaudit.tests import add_memberaudit_character_to_user
+from memberaudit.tests.utils import add_memberaudit_character_to_user
 from pytz import utc
 
 from django.test import override_settings

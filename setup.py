@@ -42,6 +42,7 @@ setup(
     install_requires=[
         "allianceauth>=2.9",
         "aa-memberaudit",
+        "django-eveuniverse>=0.12",
         "discordproxy>=0.4",
         "allianceauth-app-utils",
     ],

@@ -122,12 +122,23 @@ class RelayConfigAdmin(admin.ModelAdmin):
                 obj.mails_sent.clear()
                 new_mails_qs = obj.new_mails_queryset()
                 for mail in new_mails_qs:
-                    obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
+                    try:
+                        obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
+                    except DiscordProxyException as ex:
+                        logger.error(
+                            "%s: Failed to send test message for", obj, exc_info=True
+                        )
+                        self.message_user(
+                            request,
+                            f"{obj}: Failed to send test message: {ex}",
+                            level="WARNING",
+                        )
                 items_count += 1
-            self.message_user(
-                request,
-                f"Resending {new_mails_qs.count()} mails for {items_count} config(s).",
-            )
+            if items_count > 0:
+                self.message_user(
+                    request,
+                    f"Resent {new_mails_qs.count()} mails for {items_count} config(s).",
+                )
 
 
 if settings.DEBUG:

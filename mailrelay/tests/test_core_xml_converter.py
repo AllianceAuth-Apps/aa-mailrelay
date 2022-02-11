@@ -34,7 +34,7 @@ class TestXmlToMarkup(TestCase):
             '<a href="https://www.example.com">alpha</a>'
         )
         # then
-        self.assertEqual(result, "[https://www.example.com](alpha)")
+        self.assertEqual(result, "[alpha](https://www.example.com)")
 
     def test_should_handle_other_links(self):
         # when
