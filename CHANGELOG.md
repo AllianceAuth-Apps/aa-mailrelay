@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.0.1] - 2022-02-11
+
+### Fixed
+
+- Can not deal with non-latin scripts
+
 ## [1.0.0] - 2022-02-11
 
 ### Added

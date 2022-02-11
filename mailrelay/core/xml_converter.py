@@ -1,3 +1,5 @@
+import unicodedata
+
 from bs4 import BeautifulSoup
 
 from eveuniverse.core import evexml
@@ -12,7 +14,7 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 def eve_xml_to_discord_markup(xml_doc: str) -> str:
     """Converts Eve Online xml to Discord markup."""
-    xml_doc = evexml.unicode_to_utf8(xml_doc)
+    xml_doc = unicodedata.normalize("NFKC", xml_doc)
     xml_doc = evexml.remove_loc_tag(xml_doc)
     soup = BeautifulSoup(xml_doc, "html.parser")
     for element in soup.find_all("br"):
