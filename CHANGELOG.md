@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.0.4] - 2022-07-24
+
+### Fixed
+
+- Will now work with both Member Audit 1.16 and older versions
+
 ## [1.0.3] - 2022-06-17
 
 ### Changed

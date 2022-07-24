@@ -47,9 +47,7 @@ def forward_new_mails():
 @shared_task
 def forward_new_mails_for_config(config_pk):
     """Forward new mails from one config."""
-    config = RelayConfig.objects.select_related(
-        "character", "character__character_ownership__character"
-    ).get(pk=config_pk)
+    config = RelayConfig.objects.select_related("character").get(pk=config_pk)
     new_mails_qs = config.new_mails_queryset()
     if not new_mails_qs.exists():
         config.record_service_run()
