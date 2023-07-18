@@ -1,5 +1,7 @@
 """Managers for Mail Relay."""
 
+from typing import Optional
+
 from discordproxy.client import Channel, DiscordClient
 
 from django.conf import settings
@@ -9,7 +11,7 @@ from django.db import models
 class DiscordChannelManager(models.Manager):
     """Manager for DiscordChannel."""
 
-    def sync(self, timeout: int = None) -> int:
+    def sync(self, timeout: Optional[int] = None) -> int:
         """Synchronize list of guild channels objects with the Discord server.
 
         Args:

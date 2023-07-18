@@ -99,19 +99,19 @@ class RelayConfig(models.Model):
         if self.mail_category == self.MailCategory.ALL:
             pass
         elif self.mail_category == self.MailCategory.ALLIANCE:
-            alliance_id = self.character.character_ownership.character.alliance_id
+            alliance_id = self.character.eve_character.alliance_id
             if alliance_id:
                 new_mails_qs = new_mails_qs.filter(recipients__id=alliance_id)
             else:
                 new_mails_qs = new_mails_qs.none()
         elif self.mail_category == self.MailCategory.CORPORATION:
-            corporation_id = self.character.character_ownership.character.corporation_id
+            corporation_id = self.character.eve_character.corporation_id
             new_mails_qs = new_mails_qs.filter(recipients__id=corporation_id)
         else:
             raise NotImplementedError(f"Unknown mail category: {self.mail_category}")
         return new_mails_qs
 
-    def send_mail(self, mail: CharacterMail, timeout: int = None) -> None:
+    def send_mail(self, mail: CharacterMail, timeout: Optional[int] = None) -> None:
         """Send one mail to channel.
 
         Args:
@@ -120,8 +120,10 @@ class RelayConfig(models.Model):
         """
         if not mail.body:
             return
+
         if not self.discord_channel:
             raise ValueError(f"No channel configured for config {self}")
+
         client = DiscordClient(timeout=timeout)
         embeds = self._generate_embeds(mail)
         for num, embed in enumerate(embeds, start=1):
@@ -150,9 +152,11 @@ class RelayConfig(models.Model):
         recipients = ", ".join(
             [obj.name_plus for obj in mail.recipients.order_by("name")]
         )
+        from_name = mail.sender.name_plus if mail.sender else "?"
+        sent_text = mail.timestamp.strftime(DATETIME_FORMAT) if mail.timestamp else "?"
         full_description = (
-            f"**From**: {mail.sender.name_plus}\n"
-            f"**Sent**: {mail.timestamp.strftime(DATETIME_FORMAT)}\n"
+            f"**From**: {from_name}\n"
+            f"**Sent**: {sent_text}\n"
             f"**To**: {recipients}\n\n"
         )
         full_description += eve_xml_to_discord_markup(mail.body)
