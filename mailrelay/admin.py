@@ -123,9 +123,11 @@ class RelayConfigAdmin(admin.ModelAdmin):
         @admin.action(description="Resend mails for selected configurations")
         def resent_mails(self, request, queryset):
             items_count = 0
+            mails_count = 0
             for obj in queryset:
                 obj.mails_sent.clear()
                 new_mails_qs = obj.new_mails_queryset()
+                mails_count += new_mails_qs.count()
                 for mail in new_mails_qs:
                     try:
                         obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
@@ -142,7 +144,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
             if items_count > 0:
                 self.message_user(
                     request,
-                    f"Resent {new_mails_qs.count()} mails for {items_count} config(s).",
+                    f"Resent {mails_count} mails for {items_count} config(s).",
                 )
 
 

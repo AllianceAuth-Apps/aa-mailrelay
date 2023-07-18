@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Support for Python 3.10
 - Support for Python 3.11
+- Add pylint to CI pipeline
 
 ### Changed
 
@@ -36,7 +37,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Update depedencies for AA 3 compatibility
+- Update dependencies for AA 3 compatibility
 - Migrations update required for Django 4
 
 ## [1.0.1] - 2022-02-11
