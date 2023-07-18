@@ -7,7 +7,8 @@ from pytz import utc
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..models import DiscordCategory, DiscordChannel, RelayConfig
+from mailrelay.models import DiscordCategory, DiscordChannel, RelayConfig
+
 from .factories import (
     create_character_mail,
     create_discord_category,

@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ..core.xml_converter import eve_xml_to_discord_markup
+from mailrelay.core.xml_converter import eve_xml_to_discord_markup
 
 
 class TestXmlToMarkup(TestCase):

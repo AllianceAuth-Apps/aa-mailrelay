@@ -1,3 +1,6 @@
+"""Admin site for Mail Relay."""
+# pylint: disable=missing-class-docstring,missing-function-docstring
+
 from collections import defaultdict
 
 from discordproxy.client import DiscordClient
@@ -19,6 +22,8 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 class RelayConfigForm(ModelForm):
+    """Form for RelayConfig objects."""
+
     class Meta:
         model = RelayConfig
         fields = (

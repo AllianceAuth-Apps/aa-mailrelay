@@ -1,3 +1,5 @@
+"""Views for Mail Relay."""
+
 from discordproxy.exceptions import DiscordProxyException
 
 from django.contrib import messages
@@ -18,6 +20,7 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 @login_required
 @staff_member_required
 def admin_update_discord_channels(request):
+    """View to update the discord channels."""
     try:
         channels_count = DiscordChannel.objects.sync(
             timeout=MAILRELAY_DISCORD_USER_TIMEOUT

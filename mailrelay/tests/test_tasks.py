@@ -9,11 +9,12 @@ from django.test import override_settings
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..tasks import (
+from mailrelay.tasks import (
     forward_mail_to_discord,
     forward_new_mails,
     forward_new_mails_for_config,
 )
+
 from .factories import (
     create_character_mail,
     create_eve_entities_from_evecharacter,

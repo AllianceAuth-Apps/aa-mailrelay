@@ -1,8 +1,10 @@
+"""Utility functions for Mail Relay."""
+
 from typing import List
 
 
 def chunks_by_lines(full_text: str, max_lengths: int) -> List[str]:
-    """Converts text into chunks not exceeding max_lengths and splity by newline."""
+    """Converts text into chunks not exceeding max_lengths and split by newline."""
     parts = list()
     partial_text = ""
     for line in full_text.splitlines(keepends=True):

@@ -1,3 +1,5 @@
+"""Models for Mail Relay."""
+
 import datetime as dt
 from typing import List, Optional
 
@@ -23,12 +25,18 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 class RelayConfig(models.Model):
+    """A configuration for mail relay."""
+
     class ChannelPingType(models.TextChoices):
+        """A ping type."""
+
         NONE = "PN", "(none)"
         HERE = "PH", "@here"
         EVERYBODY = "PE", "@everybody"  # TODO: Rename to EVERYONE with next migration
 
     class MailCategory(models.TextChoices):
+        """A mail category."""
+
         ALL = "AL", "All mails"
         ALLIANCE = "AM", "Alliance mails"
         CORPORATION = "CM", "Corporation mails"
@@ -71,8 +79,10 @@ class RelayConfig(models.Model):
 
     @property
     def is_service_up(self) -> Optional[bool]:
+        """Return True if service is up, else False."""
         if not self.last_service_run_at:
             return None
+
         return now() - self.last_service_run_at < dt.timedelta(
             minutes=MAILRELAY_RELAY_GRACE_MINUTES
         )
@@ -171,6 +181,8 @@ class RelayConfig(models.Model):
 
 
 class DiscordChannel(models.Model):
+    """A Discord channel."""
+
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
     category = models.ForeignKey(
@@ -191,6 +203,8 @@ class DiscordChannel(models.Model):
 
 
 class DiscordCategory(models.Model):
+    """A Discord category."""
+
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
     last_update_at = models.DateTimeField(auto_now=True)

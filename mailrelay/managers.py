@@ -1,3 +1,5 @@
+"""Managers for Mail Relay."""
+
 from discordproxy.client import Channel, DiscordClient
 
 from django.conf import settings
@@ -5,6 +7,8 @@ from django.db import models
 
 
 class DiscordChannelManager(models.Manager):
+    """Manager for DiscordChannel."""
+
     def sync(self, timeout: int = None) -> int:
         """Synchronize list of guild channels objects with the Discord server.
 
@@ -22,9 +26,10 @@ class DiscordChannelManager(models.Manager):
             raise ValueError(
                 "Can not find Discord guild ID in settings. "
                 "Is the Discord service configured?"
-            )
+            ) from None
         client = DiscordClient(timeout=timeout)
         channels = client.get_guild_channels(guild_id)
+        # pylint: disable=no-member
         categories = {
             obj.id: obj for obj in channels if obj.type == Channel.Type.GUILD_CATEGORY
         }
@@ -33,6 +38,7 @@ class DiscordChannelManager(models.Manager):
                 id=category.id, defaults={"name": category.name}
             )
         channel_ids = set()
+        # pylint: disable=no-member
         text_channels = [obj for obj in channels if obj.type == Channel.Type.GUILD_TEXT]
         for channel in text_channels:
             if channel.parent_id and channel.parent_id in categories:

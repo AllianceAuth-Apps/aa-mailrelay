@@ -1,3 +1,5 @@
+"""Tasks for Mail Relay."""
+
 from celery import chain, shared_task
 from discordproxy.exceptions import DiscordProxyException
 from memberaudit.models import Character

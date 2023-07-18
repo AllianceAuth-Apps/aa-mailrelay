@@ -8,8 +8,9 @@ from django.test import TestCase
 
 from app_utils.testing import create_fake_user
 
-from ..admin import RelayConfigAdmin
-from ..models import RelayConfig
+from mailrelay.admin import RelayConfigAdmin
+from mailrelay.models import RelayConfig
+
 from .factories import (
     create_discord_category,
     create_discord_channel,

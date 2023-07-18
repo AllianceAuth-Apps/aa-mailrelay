@@ -7,7 +7,7 @@ from pytz import utc
 from django.contrib.auth.models import User
 from eveuniverse.models import EveEntity
 
-from ..models import DiscordCategory, DiscordChannel, RelayConfig
+from mailrelay.models import DiscordCategory, DiscordChannel, RelayConfig
 
 
 class FakeRequest(object):
