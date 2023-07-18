@@ -1,10 +1,12 @@
 import datetime as dt
 
-from memberaudit.models import CharacterMail, MailEntity
+from discordproxy.discord_api_pb2 import Channel
 from pytz import utc
 
 from django.contrib.auth.models import User
 from eveuniverse.models import EveEntity
+
+from memberaudit.models import CharacterMail, MailEntity
 
 from ..models import DiscordCategory, DiscordChannel, RelayConfig
 
@@ -105,3 +107,14 @@ def create_superuser(**kwargs):
 
 def create_fake_request(**kwargs):
     return FakeRequest(**kwargs)
+
+
+# Discordproxy
+
+
+def create_discordproxy_channel(**kwargs) -> Channel:
+    if "id" not in kwargs:
+        kwargs["id"] = next(unique_ids)
+    if "type" not in kwargs:
+        kwargs["type"] = Channel.Type.GUILD_TEXT
+    return Channel(**kwargs)
