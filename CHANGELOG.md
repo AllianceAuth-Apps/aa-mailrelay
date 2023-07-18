@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Migrated project config to PEP 621
+- Migrate to AA 3, dropped support for AA2
+- Dropped support for Python 3.7
 
 ## [1.0.4] - 2022-07-24
 
