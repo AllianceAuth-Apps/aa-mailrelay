@@ -71,7 +71,7 @@ def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterM
         }
     )
     mail = CharacterMail.objects.create(**kwargs)
-    recipient_ids += [character.character_ownership.character.character_id]
+    recipient_ids += [character.eve_character.character_id]
     recipient_objs = [
         MailEntity.objects.update_or_create_from_eve_entity_id(id=recipient_id)[0]
         for recipient_id in recipient_ids

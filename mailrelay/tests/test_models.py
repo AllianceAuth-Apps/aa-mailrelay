@@ -29,9 +29,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         super().setUpClass()
         user = create_fake_user(1001, "Bruce Wayne")
         cls.character = add_memberaudit_character_to_user(user, 1001)
-        create_eve_entities_from_evecharacter(
-            cls.character.character_ownership.character
-        )
+        create_eve_entities_from_evecharacter(cls.character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
 
     def test_should_return_corporation_mails_only(self):
@@ -80,10 +78,10 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         # given
         user = create_fake_user(1003, "Clark Kent", 2009, "Wayne Food", "WYF")
         character = add_memberaudit_character_to_user(user, 1003)
-        character.character_ownership.character.alliance_id = None
-        character.character_ownership.character.alliance_name = ""
-        character.character_ownership.character.save()
-        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        character.eve_character.alliance_id = None
+        character.eve_character.alliance_name = ""
+        character.eve_character.save()
+        create_eve_entities_from_evecharacter(character.eve_character)
         create_character_mail(character=character, sender_id=1002, recipient_ids=[3001])
         create_character_mail(character=character, sender_id=1002)
         create_character_mail(character=character, sender_id=1002, recipient_ids=[2001])
@@ -150,9 +148,7 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         super().setUpClass()
         user = create_fake_user(1001, "Bruce Wayne")
         cls.character = add_memberaudit_character_to_user(user, 1001)
-        create_eve_entities_from_evecharacter(
-            cls.character.character_ownership.character
-        )
+        create_eve_entities_from_evecharacter(cls.character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
 
     def test_should_send_valid_mail(self, mock_create_channel_message):

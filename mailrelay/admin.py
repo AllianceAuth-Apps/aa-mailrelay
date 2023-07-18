@@ -87,7 +87,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
         return obj.is_service_up
 
     def _organization(self, obj) -> str:
-        eve_character = obj.character.character_ownership.character
+        eve_character = obj.character.eve_character
         return format_html(
             "{}<br>{}",
             eve_character.corporation_name,
