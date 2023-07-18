@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Migrated project config to PEP 621
 - Migrate to AA 3, dropped support for AA2
 - Dropped support for Python 3.7
+- Action for resending mails now always available (not only in DEBUG mode)
 
 ## [1.0.4] - 2022-07-24
 
