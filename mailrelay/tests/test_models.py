@@ -2,11 +2,10 @@ import datetime as dt
 from unittest.mock import patch
 
 from discordproxy.client import Channel
+from memberaudit.tests.utils import add_memberaudit_character_to_user
 from pytz import utc
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
-
-from memberaudit.tests.utils import add_memberaudit_character_to_user
 
 from ..models import DiscordCategory, DiscordChannel, RelayConfig
 from .factories import (

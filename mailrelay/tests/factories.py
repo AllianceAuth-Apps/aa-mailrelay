@@ -1,12 +1,11 @@
 import datetime as dt
 
 from discordproxy.discord_api_pb2 import Channel
+from memberaudit.models import CharacterMail, MailEntity
 from pytz import utc
 
 from django.contrib.auth.models import User
 from eveuniverse.models import EveEntity
-
-from memberaudit.models import CharacterMail, MailEntity
 
 from ..models import DiscordCategory, DiscordChannel, RelayConfig
 
