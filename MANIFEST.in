@@ -1,5 +1,0 @@
-include LICENSE
-include README.md
-recursive-include mailrelay *.py
-recursive-include mailrelay/static *
-recursive-include mailrelay/templates *

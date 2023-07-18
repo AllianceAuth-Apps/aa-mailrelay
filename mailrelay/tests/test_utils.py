@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ..utils import chunks_by_lines
+from mailrelay.utils import chunks_by_lines
 
 
 class TestChunkLines(TestCase):

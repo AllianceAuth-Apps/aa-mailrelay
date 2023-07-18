@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.1.0] - 2023-07-18
+
+### Added
+
+- Support for Python 3.10
+- Support for Python 3.11
+- Add pylint to CI pipeline
+
+### Changed
+
+- Migrated project config to PEP 621
+- Migrate to AA 3, dropped support for AA2
+- Dropped support for Python 3.7
+- Action for resending mails now always available (not only in DEBUG mode)
+
 ## [1.0.4] - 2022-07-24
 
 ### Fixed
@@ -23,7 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Update depedencies for AA 3 compatibility
+- Update dependencies for AA 3 compatibility
 - Migrations update required for Django 4
 
 ## [1.0.1] - 2022-02-11

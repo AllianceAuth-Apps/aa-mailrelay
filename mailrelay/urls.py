@@ -1,3 +1,5 @@
+"""Routes for Mail Relay."""
+
 from django.urls import path
 
 from . import views

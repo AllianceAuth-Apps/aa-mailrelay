@@ -1,4 +1,6 @@
-from app_utils.django import clean_setting
+"""Settings for Mail Relay."""
+
+from app_utils.app_settings import clean_setting
 
 MAILRELAY_DISCORD_TASK_TIMEOUT = clean_setting("MAILRELAY_DISCORD_TASK_TIMEOUT", 60)
 """Timeout for asynchronous Discord requests in seconds."""

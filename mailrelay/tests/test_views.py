@@ -6,7 +6,8 @@ from django.test import RequestFactory
 
 from app_utils.testing import NoSocketsTestCase
 
-from ..views import admin_update_discord_channels
+from mailrelay.views import admin_update_discord_channels
+
 from .factories import create_superuser
 
 VIEWS_PATH = "mailrelay.views"

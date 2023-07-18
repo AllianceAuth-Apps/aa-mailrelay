@@ -1,3 +1,5 @@
+"""Tasks for Mail Relay."""
+
 from celery import chain, shared_task
 from discordproxy.exceptions import DiscordProxyException
 from memberaudit.models import Character
@@ -72,7 +74,7 @@ def forward_mail_to_discord(config_pk, mail_pk):
     config = RelayConfig.objects.select_related("character", "discord_channel").get(
         pk=config_pk
     )
-    mail = config.character.mails.get(pk=mail_pk)
+    mail = config.character.mails.get(pk=mail_pk)  # type: ignore
     try:
         config.send_mail(mail=mail, timeout=MAILRELAY_DISCORD_TASK_TIMEOUT)
     except DiscordProxyException as ex:

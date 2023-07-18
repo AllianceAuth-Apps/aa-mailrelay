@@ -9,8 +9,9 @@ from django.test import override_settings
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..models import RelayConfig
-from ..tasks import forward_new_mails
+from mailrelay.models import RelayConfig
+from mailrelay.tasks import forward_new_mails
+
 from .factories import (
     create_character_mail,
     create_eve_entities_from_evecharacter,

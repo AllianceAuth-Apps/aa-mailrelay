@@ -1,3 +1,6 @@
+"""Admin site for Mail Relay."""
+# pylint: disable=missing-class-docstring,missing-function-docstring
+
 from collections import defaultdict
 
 from discordproxy.client import DiscordClient
@@ -19,6 +22,8 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 class RelayConfigForm(ModelForm):
+    """Form for RelayConfig objects."""
+
     class Meta:
         model = RelayConfig
         fields = (
@@ -82,7 +87,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
         return obj.is_service_up
 
     def _organization(self, obj) -> str:
-        eve_character = obj.character.character_ownership.character
+        eve_character = obj.character.eve_character
         return format_html(
             "{}<br>{}",
             eve_character.corporation_name,
@@ -113,32 +118,38 @@ class RelayConfigAdmin(admin.ModelAdmin):
                 request, f"Submitted {items_count} successful test message(s)."
             )
 
-    if settings.DEBUG:
+    @admin.action(description="Resend mails for selected configurations")
+    def resent_mails(self, request, queryset):
+        items_count = 0
+        mails_count = 0
+        for obj in queryset:
+            obj.mails_sent.clear()
+            new_mails_qs = obj.new_mails_queryset()
+            mails_sent = 0
+            for mail in new_mails_qs:
+                try:
+                    obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
+                except DiscordProxyException as ex:
+                    logger.error(
+                        "%s: Failed to send test message for", obj, exc_info=True
+                    )
+                    self.message_user(
+                        request,
+                        f"{obj}: Failed to send test message: {ex}",
+                        level="WARNING",
+                    )
+                else:
+                    mails_sent += 1
 
-        @admin.action(description="Resend mails for selected configurations")
-        def resent_mails(self, request, queryset):
-            items_count = 0
-            for obj in queryset:
-                obj.mails_sent.clear()
-                new_mails_qs = obj.new_mails_queryset()
-                for mail in new_mails_qs:
-                    try:
-                        obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
-                    except DiscordProxyException as ex:
-                        logger.error(
-                            "%s: Failed to send test message for", obj, exc_info=True
-                        )
-                        self.message_user(
-                            request,
-                            f"{obj}: Failed to send test message: {ex}",
-                            level="WARNING",
-                        )
+            if mails_sent > 0:
+                mails_count += mails_sent
                 items_count += 1
-            if items_count > 0:
-                self.message_user(
-                    request,
-                    f"Resent {new_mails_qs.count()} mails for {items_count} config(s).",
-                )
+
+        if items_count > 0:
+            self.message_user(
+                request,
+                f"Resent {mails_count} mails for {items_count} config(s).",
+            )
 
 
 if settings.DEBUG:

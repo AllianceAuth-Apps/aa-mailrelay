@@ -5,20 +5,26 @@ from memberaudit.tests.utils import add_memberaudit_character_to_user
 
 from django.contrib.admin.sites import AdminSite
 from django.test import TestCase
+from django.utils.timezone import now
 
 from app_utils.testing import create_fake_user
 
-from ..admin import RelayConfigAdmin
-from ..models import RelayConfig
+from mailrelay.admin import RelayConfigAdmin
+from mailrelay.models import RelayConfig
+
 from .factories import (
+    create_character_mail,
     create_discord_category,
     create_discord_channel,
+    create_eve_entities_from_evecharacter,
+    create_eve_entity,
     create_fake_request,
     create_relay_config,
     create_superuser,
 )
 
 ADMIN_MODULE = "mailrelay.admin"
+MODELS_MODULE = "mailrelay.models"
 
 
 class TestRelayConfigAdmin(TestCase):
@@ -97,3 +103,42 @@ class TestRelayConfigAdmin(TestCase):
         response = self.client.get("/admin/mailrelay/relayconfig/")
         # then
         self.assertEqual(response.status_code, 200)
+
+    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_MODULE + ".RelayConfig.send_mail")
+    def test_action_resent_mails_should_sent(self, mock_send_mail, mock_message_user):
+        # given
+        create_eve_entities_from_evecharacter(self.character.eve_character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        create_character_mail(character=self.character, sender_id=1002, timestamp=now())
+        create_relay_config(character=self.character)
+        request = create_fake_request(user=self.admin_user)
+        queryset = RelayConfig.objects.all()
+        # when
+        self.modeladmin.resent_mails(request, queryset)
+        # then
+        self.assertEqual(mock_send_mail.call_count, 1)
+        self.assertTrue(mock_message_user.called)
+        _, kwargs = mock_message_user.call_args
+        self.assertNotIn("level", kwargs)
+
+    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_MODULE + ".RelayConfig.send_mail")
+    def test_action_resent_mails_should_sent_should_handle_error(
+        self, mock_send_mail, mock_message_user
+    ):
+        # given
+        mock_send_mail.side_effect = DiscordProxyException
+        create_eve_entities_from_evecharacter(self.character.eve_character)
+        create_eve_entity(id=1002, name="Peter Parker")
+        create_character_mail(character=self.character, sender_id=1002, timestamp=now())
+        create_relay_config(character=self.character)
+        request = create_fake_request(user=self.admin_user)
+        queryset = RelayConfig.objects.all()
+        # when
+        self.modeladmin.resent_mails(request, queryset)
+        # then
+        self.assertEqual(mock_send_mail.call_count, 1)
+        self.assertTrue(mock_message_user.called)
+        _, kwargs = mock_message_user.call_args
+        self.assertEqual(kwargs["level"], "WARNING")

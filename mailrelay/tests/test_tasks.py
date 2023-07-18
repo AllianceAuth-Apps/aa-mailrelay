@@ -9,11 +9,12 @@ from django.test import override_settings
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
-from ..tasks import (
+from mailrelay.tasks import (
     forward_mail_to_discord,
     forward_new_mails,
     forward_new_mails_for_config,
 )
+
 from .factories import (
     create_character_mail,
     create_eve_entities_from_evecharacter,
@@ -75,7 +76,7 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         mock_send_mail.return_value = True
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
-        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entities_from_evecharacter(character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
         mail_1 = create_character_mail(
             character=character, sender_id=1002, recipient_ids=[2001]
@@ -97,7 +98,7 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         mock_send_mail.return_value = True
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
-        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entities_from_evecharacter(character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
         mail = create_character_mail(character=character, sender_id=1002)
         config = create_relay_config(character=character)
@@ -120,7 +121,7 @@ class TestForwardMailToDiscord(NoSocketsTestCase):
         mock_send_mail.return_value = True
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
-        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entities_from_evecharacter(character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
         mail = create_character_mail(character=character, sender_id=1002)
         config = create_relay_config(character=character)
@@ -139,7 +140,7 @@ class TestForwardMailToDiscord(NoSocketsTestCase):
         mock_send_mail.side_effect = my_error
         user = create_fake_user(1001, "Bruce Wayne")
         character = add_memberaudit_character_to_user(user, 1001)
-        create_eve_entities_from_evecharacter(character.character_ownership.character)
+        create_eve_entities_from_evecharacter(character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
         mail = create_character_mail(character=character, sender_id=1002)
         config = create_relay_config(character=character)
