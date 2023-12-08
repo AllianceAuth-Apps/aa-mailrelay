@@ -14,6 +14,8 @@ from .models import RelayConfig
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
+WAIT_FOR_MAIL_UPDATE_TO_COMPLETE = 60
+
 
 @shared_task
 def forward_new_mails():
@@ -23,12 +25,12 @@ def forward_new_mails():
             logger.warning("No channel configured for config %s", config)
             continue
 
-        chain(
-            [
-                update_character_mails.si(config.character.pk, force_update=True),
-                forward_new_mails_for_config.si(config.pk),
-            ]
-        ).delay()
+        update_character_mails.apply_async(
+            kwargs={"character_pk": config.character.pk, "force_update": False}
+        )
+        forward_new_mails_for_config.apply_async(
+            args=[config.pk], countdown=WAIT_FOR_MAIL_UPDATE_TO_COMPLETE
+        )
 
 
 @shared_task
@@ -38,7 +40,7 @@ def forward_new_mails_for_config(config_pk: int):
     new_mails_qs = config.new_mails_queryset()
     if not new_mails_qs.exists():
         config.record_service_run()
-        logger.debug("No new mails to forward.")
+        logger.info("No new mails to forward")
         return
 
     my_tasks = [

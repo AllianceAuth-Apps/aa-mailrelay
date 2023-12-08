@@ -47,10 +47,11 @@ class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
         # when
         forward_new_mails()
         # then
-        self.assertEqual(mock_update_character_mails.si.call_count, 2)
-        self.assertEqual(mock_forward_new_mails_for_config.si.call_count, 2)
+        self.assertEqual(mock_update_character_mails.apply_async.call_count, 2)
+        self.assertEqual(mock_forward_new_mails_for_config.apply_async.call_count, 2)
         called_config_pks = {
-            obj[0][0] for obj in mock_forward_new_mails_for_config.si.call_args_list
+            o[1]["args"][0]
+            for o in mock_forward_new_mails_for_config.apply_async.call_args_list
         }
         self.assertSetEqual({config_1001.pk, config_1002.pk}, called_config_pks)
 

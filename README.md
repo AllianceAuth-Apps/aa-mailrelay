@@ -75,7 +75,7 @@ Restart your supervisor services for Auth
 
 ...
 
-### Steo 5 - Setup mail relays
+### Step 5 - Setup mail relays
 
 To setup your first mail relay go to the admin site / Mail Relay / RelayConfig.
 
