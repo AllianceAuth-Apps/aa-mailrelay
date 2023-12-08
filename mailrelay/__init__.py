@@ -3,5 +3,5 @@
 # pylint: disable=invalid-name
 default_app_config = "mailrelay.apps.MailrelayConfig"
 
-__version__ = "1.2.0"
+__version__ = "1.2.0a1"
 __title__ = "Mail Relay"
