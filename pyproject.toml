@@ -7,7 +7,7 @@ name = "aa-mailrelay"
 dynamic = ["version", "description"]
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 authors = [{ name = "Erik Kalkoken", email = "kalkoken87@gmail.com" }]
 classifiers = [
     "Environment :: Web Environment",
@@ -64,9 +64,4 @@ good-names = ["i", "j", "k", "ex"]
 max-line-length = 120
 
 [tool.pylint.'MESSAGES CONTROL']
-disable = [
-    "too-many-instance-attributes",
-    "too-few-public-methods",
-    "import-outside-toplevel",
-    "cyclic-import",
-]
+disable = ["too-few-public-methods", "import-outside-toplevel", "cyclic-import"]
