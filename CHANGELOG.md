@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Ability to disable MAILRELAY_OLDEST_MAIL_HOURS setting
 - Reworked dependencies with Member Audit tasks
+- Fixed some minor model issues
 
 ## [1.1.0] - 2023-07-18
 

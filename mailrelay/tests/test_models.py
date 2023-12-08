@@ -213,7 +213,7 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002)
         config = create_relay_config(
-            character=self.character, ping_type=RelayConfig.ChannelPingType.EVERYBODY
+            character=self.character, ping_type=RelayConfig.ChannelPingType.EVERYONE
         )
         # when
         config.send_mail(mail)

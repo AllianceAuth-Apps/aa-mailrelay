@@ -89,9 +89,9 @@ Here is a list of available settings for this app. They can be configured by add
 
 Note that all settings are optional and the app will use the documented default settings if they are not used.
 
-Name | Description | Default
--- | -- | --
-`MAILRELAY_DISCORD_TASK_TIMEOUT`| Timeout for asynchronous Discord requests in seconds. | `60`
-`MAILRELAY_DISCORD_USER_TIMEOUT`| Timeout for user facing Discord requests in seconds. | `30`
-`MAILRELAY_OLDEST_MAIL_HOURS`| Oldest mail to be forwarded in hours. | `2`
-`MAILRELAY_RELAY_GRACE_MINUTES`| Max time in minutes since last successful service run before config is reported as down. | `30`
+Name|Description|Default
+--|--|--
+`MAILRELAY_DISCORD_TASK_TIMEOUT`|Timeout for asynchronous Discord requests in seconds.|`60`
+`MAILRELAY_DISCORD_USER_TIMEOUT`|Timeout for user facing Discord requests in seconds.|`30`
+`MAILRELAY_OLDEST_MAIL_HOURS`|Oldest mail to be forwarded in hours. Set to 0 to disable.|`2`
+`MAILRELAY_RELAY_GRACE_MINUTES`|Max time in minutes since last successful relay before service is reported as down.|`30`

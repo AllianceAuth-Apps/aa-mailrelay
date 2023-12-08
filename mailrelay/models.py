@@ -32,7 +32,7 @@ class RelayConfig(models.Model):
 
         NONE = "PN", "(none)"
         HERE = "PH", "@here"
-        EVERYBODY = "PE", "@everybody"  # TODO: Rename to EVERYONE with next migration
+        EVERYONE = "PE", "@everyone"
 
     class MailCategory(models.TextChoices):
         """A mail category."""
@@ -145,7 +145,7 @@ class RelayConfig(models.Model):
         self.mails_sent.add(mail)
 
     def _content_with_mentions(self) -> str:
-        if self.ping_type == self.ChannelPingType.EVERYBODY:
+        if self.ping_type == self.ChannelPingType.EVERYONE:
             mention = "@everyone "
         elif self.ping_type == self.ChannelPingType.HERE:
             mention = "@here "
@@ -223,6 +223,9 @@ class DiscordCategory(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
     last_update_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Discord categories"
 
     def __str__(self) -> str:
         return str(self.name)
