@@ -25,17 +25,14 @@ TASKS_PATH = "mailrelay.tasks"
 
 @shared_task
 def dummy_task(*args, **kwargs):
-    """Can replace tasks we need do want to run."""
+    """Can replace tasks that need to run."""
     pass
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(MODELS_PATH + ".DiscordClient", spec=True)
-@patch(TASKS_PATH + ".update_character_mailing_lists", new=dummy_task)
-@patch(TASKS_PATH + ".update_character_mail_labels", new=dummy_task)
-@patch(TASKS_PATH + ".update_character_mail_headers", new=dummy_task)
-@patch(TASKS_PATH + ".update_character_mail_bodies", new=dummy_task)
-@patch(TASKS_PATH + ".update_unresolved_eve_entities", new=dummy_task)
+@patch(TASKS_PATH + ".update_character_mails", new=dummy_task)
 class TestForwardNewMails(NoSocketsTestCase):
     def test_should_forward_mail_with_one_config(self, mock_DiscordClient):
         # given
@@ -47,10 +44,12 @@ class TestForwardNewMails(NoSocketsTestCase):
         create_eve_entity(id=1002, name="Peter Parker")
         create_character_mail(character=character_1001, sender_id=1002)
         create_relay_config(character=character_1001)
+
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             forward_new_mails.delay()
+
         # then
         self.assertEqual(
             mock_DiscordClient.return_value.create_channel_message.call_count, 1

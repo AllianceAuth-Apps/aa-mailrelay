@@ -27,21 +27,12 @@ TASKS_PATH = "mailrelay.tasks"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-@patch(TASKS_PATH + ".update_character_mailing_lists", spec=True)
-@patch(TASKS_PATH + ".update_character_mail_labels", spec=True)
-@patch(TASKS_PATH + ".update_character_mail_headers", spec=True)
-@patch(TASKS_PATH + ".update_character_mail_bodies", spec=True)
-@patch(TASKS_PATH + ".update_unresolved_eve_entities", spec=True)
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
+@patch(TASKS_PATH + ".update_character_mails", spec=True)
 @patch(TASKS_PATH + ".forward_new_mails_for_config", spec=True)
 class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
     def test_should_send_mails(
-        self,
-        mock_forward_new_mails_for_config,
-        mock_update_unresolved_eve_entities,
-        mock_update_character_mail_bodies,
-        mock_update_character_mail_headers,
-        mock_update_character_mail_labels,
-        mock_update_character_mailing_lists,
+        self, mock_forward_new_mails_for_config, mock_update_character_mails
     ):
         # given
         user_1001 = create_fake_user(1001, "Bruce Wayne")
@@ -56,19 +47,17 @@ class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
         # when
         forward_new_mails()
         # then
-        self.assertEqual(mock_update_character_mailing_lists.si.call_count, 2)
-        self.assertEqual(mock_update_character_mail_labels.si.call_count, 2)
-        self.assertEqual(mock_update_character_mail_headers.si.call_count, 2)
-        self.assertEqual(mock_update_character_mail_bodies.si.call_count, 2)
-        self.assertEqual(mock_update_unresolved_eve_entities.si.call_count, 2)
-        self.assertEqual(mock_forward_new_mails_for_config.si.call_count, 2)
+        self.assertEqual(mock_update_character_mails.apply_async.call_count, 2)
+        self.assertEqual(mock_forward_new_mails_for_config.apply_async.call_count, 2)
         called_config_pks = {
-            obj[0][0] for obj in mock_forward_new_mails_for_config.si.call_args_list
+            o[1]["args"][0]
+            for o in mock_forward_new_mails_for_config.apply_async.call_args_list
         }
         self.assertSetEqual({config_1001.pk, config_1002.pk}, called_config_pks)
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(MODELS_PATH + ".RelayConfig.send_mail")
 class TestForwardNewMailsOneConfig(NoSocketsTestCase):
     def test_should_forward_all_mails(self, mock_send_mail):
@@ -114,6 +103,7 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         self.assertIsNotNone(config.last_service_run_at)
 
 
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(MODELS_PATH + ".RelayConfig.send_mail")
 class TestForwardMailToDiscord(NoSocketsTestCase):
     def test_should_send_mail(self, mock_send_mail):

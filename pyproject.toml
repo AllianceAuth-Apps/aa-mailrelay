@@ -6,11 +6,9 @@ build-backend = "flit_core.buildapi"
 name = "aa-mailrelay"
 dynamic = ["version", "description"]
 readme = "README.md"
-license = {file = "LICENSE"}
-requires-python = ">=3.7"
-authors = [
-    { name = "Erik Kalkoken", email = "kalkoken87@gmail.com" },
-]
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+authors = [{ name = "Erik Kalkoken", email = "kalkoken87@gmail.com" }]
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
@@ -50,7 +48,7 @@ sections = [
     "DJANGO",
     "ALLIANCEAUTH",
     "FIRSTPARTY",
-    "LOCALFOLDER"
+    "LOCALFOLDER",
 ]
 known_allianceauth = ["allianceauth", "app_utils"]
 known_django = ["django", "django_webtest", "esi", "eveuniverse"]
@@ -66,4 +64,4 @@ good-names = ["i", "j", "k", "ex"]
 max-line-length = 120
 
 [tool.pylint.'MESSAGES CONTROL']
-disable = ["R0902", "R0903", "C0415", "W0511", "R0401"]
+disable = ["too-few-public-methods", "import-outside-toplevel", "cyclic-import"]

@@ -32,7 +32,7 @@ class RelayConfig(models.Model):
 
         NONE = "PN", "(none)"
         HERE = "PH", "@here"
-        EVERYBODY = "PE", "@everybody"  # TODO: Rename to EVERYONE with next migration
+        EVERYONE = "PE", "@everyone"
 
     class MailCategory(models.TextChoices):
         """A mail category."""
@@ -89,26 +89,37 @@ class RelayConfig(models.Model):
 
     def new_mails_queryset(self) -> models.QuerySet:
         """Determine which mails have not yet been sent."""
-        oldest_timestamp = now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
-        self.mails_sent.filter(timestamp__lt=oldest_timestamp).delete()
-        new_mails_qs = (
-            self.character.mails.select_related("sender")
-            .exclude(pk__in=self.mails_sent.values_list("pk", flat=True))
-            .filter(timestamp__gte=oldest_timestamp)
+        oldest_timestamp = (
+            now() - dt.timedelta(hours=MAILRELAY_OLDEST_MAIL_HOURS)
+            if MAILRELAY_OLDEST_MAIL_HOURS
+            else None
         )
+        if oldest_timestamp:
+            self.mails_sent.filter(timestamp__lt=oldest_timestamp).delete()
+
+        new_mails_qs = self.character.mails.select_related("sender").exclude(
+            pk__in=self.mails_sent.values_list("pk", flat=True)
+        )
+        if oldest_timestamp:
+            new_mails_qs = new_mails_qs.filter(timestamp__gte=oldest_timestamp)
+
         if self.mail_category == self.MailCategory.ALL:
             pass
+
         elif self.mail_category == self.MailCategory.ALLIANCE:
             alliance_id = self.character.eve_character.alliance_id
             if alliance_id:
                 new_mails_qs = new_mails_qs.filter(recipients__id=alliance_id)
             else:
                 new_mails_qs = new_mails_qs.none()
+
         elif self.mail_category == self.MailCategory.CORPORATION:
             corporation_id = self.character.eve_character.corporation_id
             new_mails_qs = new_mails_qs.filter(recipients__id=corporation_id)
+
         else:
             raise NotImplementedError(f"Unknown mail category: {self.mail_category}")
+
         return new_mails_qs
 
     def send_mail(self, mail: CharacterMail, timeout: Optional[int] = None) -> None:
@@ -134,7 +145,7 @@ class RelayConfig(models.Model):
         self.mails_sent.add(mail)
 
     def _content_with_mentions(self) -> str:
-        if self.ping_type == self.ChannelPingType.EVERYBODY:
+        if self.ping_type == self.ChannelPingType.EVERYONE:
             mention = "@everyone "
         elif self.ping_type == self.ChannelPingType.HERE:
             mention = "@here "
@@ -212,6 +223,9 @@ class DiscordCategory(models.Model):
     id = models.BigIntegerField(primary_key=True)
     name = models.CharField(max_length=100, db_index=True)
     last_update_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Discord categories"
 
     def __str__(self) -> str:
         return str(self.name)

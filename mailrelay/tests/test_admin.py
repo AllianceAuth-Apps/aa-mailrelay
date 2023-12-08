@@ -23,10 +23,11 @@ from .factories import (
     create_superuser,
 )
 
-ADMIN_MODULE = "mailrelay.admin"
-MODELS_MODULE = "mailrelay.models"
+ADMIN_PATH = "mailrelay.admin"
+MODELS_PATH = "mailrelay.models"
 
 
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 class TestRelayConfigAdmin(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -62,8 +63,8 @@ class TestRelayConfigAdmin(TestCase):
         # then
         self.assertEqual(result, "Wayne Technologies Inc.<br>Wayne Enterprises")
 
-    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_MODULE + ".DiscordClient.create_channel_message")
+    @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_PATH + ".DiscordClient.create_channel_message")
     def test_action_send_test_message(
         self, mock_create_channel_message, mock_message_user
     ):
@@ -80,8 +81,8 @@ class TestRelayConfigAdmin(TestCase):
         self.assertSetEqual(channel_ids, {config.discord_channel.pk})
         self.assertTrue(mock_message_user.called)
 
-    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_MODULE + ".DiscordClient.create_channel_message")
+    @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_PATH + ".DiscordClient.create_channel_message")
     def test_action_send_test_message_with_error(
         self, mock_create_channel_message, mock_message_user
     ):
@@ -104,8 +105,8 @@ class TestRelayConfigAdmin(TestCase):
         # then
         self.assertEqual(response.status_code, 200)
 
-    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_MODULE + ".RelayConfig.send_mail")
+    @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_PATH + ".RelayConfig.send_mail")
     def test_action_resent_mails_should_sent(self, mock_send_mail, mock_message_user):
         # given
         create_eve_entities_from_evecharacter(self.character.eve_character)
@@ -122,8 +123,8 @@ class TestRelayConfigAdmin(TestCase):
         _, kwargs = mock_message_user.call_args
         self.assertNotIn("level", kwargs)
 
-    @patch(ADMIN_MODULE + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_MODULE + ".RelayConfig.send_mail")
+    @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
+    @patch(ADMIN_PATH + ".RelayConfig.send_mail")
     def test_action_resent_mails_should_sent_should_handle_error(
         self, mock_send_mail, mock_message_user
     ):

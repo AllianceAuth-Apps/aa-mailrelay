@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.2.0] - 2023-12-08
+
+### Changed
+
+- Ability to disable `MAILRELAY_OLDEST_MAIL_HOURS` setting
+- Removed dependencies to Member Audit mail update sub-tasks
+- Fixed some minor model issues
+- Minimum supported Python version is now 3.8
+
+### Fixed
+
+- CI tests for Python 3.10 & 3.11 are not running
+
 ## [1.1.0] - 2023-07-18
 
 ### Added
