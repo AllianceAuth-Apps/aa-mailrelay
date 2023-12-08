@@ -25,11 +25,12 @@ TASKS_PATH = "mailrelay.tasks"
 
 @shared_task
 def dummy_task(*args, **kwargs):
-    """Can replace tasks we need do want to run."""
+    """Can replace tasks that need to run."""
     pass
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(MODELS_PATH + ".DiscordClient", spec=True)
 @patch(TASKS_PATH + ".update_character_mails", new=dummy_task)
 class TestForwardNewMails(NoSocketsTestCase):

@@ -27,6 +27,7 @@ TASKS_PATH = "mailrelay.tasks"
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(TASKS_PATH + ".update_character_mails", spec=True)
 @patch(TASKS_PATH + ".forward_new_mails_for_config", spec=True)
 class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
@@ -55,6 +56,7 @@ class TestForwardNewMailsAllConfigs(NoSocketsTestCase):
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(MODELS_PATH + ".RelayConfig.send_mail")
 class TestForwardNewMailsOneConfig(NoSocketsTestCase):
     def test_should_forward_all_mails(self, mock_send_mail):
@@ -100,6 +102,7 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         self.assertIsNotNone(config.last_service_run_at)
 
 
+@patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
 @patch(MODELS_PATH + ".RelayConfig.send_mail")
 class TestForwardMailToDiscord(NoSocketsTestCase):
     def test_should_send_mail(self, mock_send_mail):

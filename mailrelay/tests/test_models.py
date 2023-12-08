@@ -32,6 +32,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         create_eve_entities_from_evecharacter(cls.character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
 
+    @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_return_corporation_mails_only(self):
         # given
         corporation_mail = create_character_mail(
@@ -44,15 +45,17 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         config = create_relay_config(
             character=self.character, mail_category=RelayConfig.MailCategory.CORPORATION
         )
+
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             result = config.new_mails_queryset()
-        # then
-        self.assertSetEqual(
-            {corporation_mail.pk}, set(result.values_list("pk", flat=True))
-        )
 
+        # then
+        mail_pks = set(result.values_list("pk", flat=True))
+        self.assertSetEqual(mail_pks, {corporation_mail.pk})
+
+    @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_return_alliance_mails_only(self):
         # given
         alliance_mail = create_character_mail(
@@ -65,15 +68,17 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         config = create_relay_config(
             character=self.character, mail_category=RelayConfig.MailCategory.ALLIANCE
         )
+
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             result = config.new_mails_queryset()
-        # then
-        self.assertSetEqual(
-            {alliance_mail.pk}, set(result.values_list("pk", flat=True))
-        )
 
+        # then
+        mail_pks = set(result.values_list("pk", flat=True))
+        self.assertSetEqual(mail_pks, {alliance_mail.pk})
+
+    @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_not_return_alliance_mails(self):
         # given
         user = create_fake_user(1003, "Clark Kent", 2009, "Wayne Food", "WYF")
@@ -88,13 +93,17 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         config = create_relay_config(
             character=character, mail_category=RelayConfig.MailCategory.ALLIANCE
         )
+
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             result = config.new_mails_queryset()
-        # then
-        self.assertSetEqual(set(), set(result.values_list("pk", flat=True)))
 
+        # then
+        mail_pks = set(result.values_list("pk", flat=True))
+        self.assertSetEqual(mail_pks, set())
+
+    @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_return_all_mails(self):
         # given
         corporation_mail = create_character_mail(
@@ -107,14 +116,16 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         config = create_relay_config(
             character=self.character, mail_category=RelayConfig.MailCategory.ALL
         )
+
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
             result = config.new_mails_queryset()
+
         # then
+        mail_pks = set(result.values_list("pk", flat=True))
         self.assertSetEqual(
-            {corporation_mail.pk, personal_mail.pk, alliance_mail.pk},
-            set(result.values_list("pk", flat=True)),
+            mail_pks, {corporation_mail.pk, personal_mail.pk, alliance_mail.pk}
         )
 
     @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 1)
@@ -133,12 +144,41 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         config = create_relay_config(
             character=self.character, mail_category=RelayConfig.MailCategory.ALL
         )
+
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = dt.datetime(2021, 12, 24, 12, 29, tzinfo=utc)
             result = config.new_mails_queryset()
+
         # then
-        self.assertSetEqual({new_mail.pk}, set(result.values_list("pk", flat=True)))
+        mail_pks = set(result.values_list("pk", flat=True))
+        self.assertSetEqual(mail_pks, {new_mail.pk})
+
+    # @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 0)
+    # def test_should_return_all_mail_when_setting_disabled(self):
+    #     # given
+    #     new_mail = create_character_mail(
+    #         character=self.character,
+    #         sender_id=1002,
+    #         timestamp=dt.datetime(2021, 12, 24, 11, 30, tzinfo=utc),
+    #     )
+    #     old_mail = create_character_mail(
+    #         character=self.character,
+    #         sender_id=1002,
+    #         timestamp=dt.datetime(2021, 12, 24, 11, 00, tzinfo=utc),
+    #     )
+    #     config = create_relay_config(
+    #         character=self.character, mail_category=RelayConfig.MailCategory.ALL
+    #     )
+
+    #     # when
+    #     with patch(MODELS_PATH + ".now") as mock_now:
+    #         mock_now.return_value = dt.datetime(2021, 12, 24, 12, 29, tzinfo=utc)
+    #         result = config.new_mails_queryset()
+
+    #     # then
+    #     mail_pks = set(result.values_list("pk", flat=True))
+    #     self.assertSetEqual(mail_pks, {old_mail.pk, new_mail.pk})
 
 
 @patch(MODELS_PATH + ".DiscordClient.create_channel_message")
