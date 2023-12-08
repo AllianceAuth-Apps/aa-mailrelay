@@ -2,14 +2,8 @@
 
 from celery import chain, shared_task
 from discordproxy.exceptions import DiscordProxyException
-from memberaudit.models import Character
-from memberaudit.tasks import (
-    update_character_mail_bodies,
-    update_character_mail_headers,
-    update_character_mail_labels,
-    update_character_mailing_lists,
-    update_unresolved_eve_entities,
-)
+from memberaudit.models import CharacterMail
+from memberaudit.tasks import update_character_mails
 
 from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
@@ -28,26 +22,17 @@ def forward_new_mails():
         if not config.discord_channel:
             logger.warning("No channel configured for config %s", config)
             continue
+
         chain(
             [
-                update_character_mailing_lists.si(
-                    config.character.pk, force_update=True
-                ),
-                update_character_mail_labels.si(config.character.pk, force_update=True),
-                update_character_mail_headers.si(
-                    config.character.pk, force_update=True
-                ),
-                update_character_mail_bodies.si(config.character.pk),
-                update_unresolved_eve_entities.si(
-                    config.character.pk, Character.UpdateSection.MAILS
-                ),
+                update_character_mails.si(config.character.pk, force_update=True),
                 forward_new_mails_for_config.si(config.pk),
             ]
         ).delay()
 
 
 @shared_task
-def forward_new_mails_for_config(config_pk):
+def forward_new_mails_for_config(config_pk: int):
     """Forward new mails from one config."""
     config = RelayConfig.objects.select_related("character").get(pk=config_pk)
     new_mails_qs = config.new_mails_queryset()
@@ -55,11 +40,7 @@ def forward_new_mails_for_config(config_pk):
         config.record_service_run()
         logger.debug("No new mails to forward.")
         return
-    logger.info(
-        "Forwarding %s eve mails to channel: %s",
-        new_mails_qs.count(),
-        config.discord_channel,
-    )
+
     my_tasks = [
         forward_mail_to_discord.si(config_pk=config_pk, mail_pk=mail.pk)
         for mail in new_mails_qs.order_by("timestamp")
@@ -71,19 +52,25 @@ def forward_new_mails_for_config(config_pk):
 @shared_task
 def forward_mail_to_discord(config_pk, mail_pk):
     """Forward one mail to Discord."""
-    config = RelayConfig.objects.select_related("character", "discord_channel").get(
-        pk=config_pk
-    )
-    mail = config.character.mails.get(pk=mail_pk)  # type: ignore
+    config: RelayConfig = RelayConfig.objects.select_related(
+        "character", "discord_channel"
+    ).get(pk=config_pk)
+    mail: CharacterMail = config.character.mails.get(pk=mail_pk)  # type: ignore
     try:
         config.send_mail(mail=mail, timeout=MAILRELAY_DISCORD_TASK_TIMEOUT)
     except DiscordProxyException as ex:
         logger.error(
-            "%s: Failed to send mail %s due to error from Discord Proxy. Will try again later: %s",
+            "%s: Failed to send mail %s to channel %s due to error from Discord Proxy. "
+            "Will try again later: %s",
             config,
             mail,
+            config.discord_channel,
             ex,
         )
+
+    logger.info(
+        "%s: Forwarded mail %s to channel %s", config, mail, config.discord_channel
+    )
 
 
 @shared_task
