@@ -64,9 +64,9 @@ class TestRelayConfigAdmin(TestCase):
         self.assertEqual(result, "Wayne Technologies Inc.<br>Wayne Enterprises")
 
     @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_PATH + ".DiscordClient.create_channel_message")
+    @patch(ADMIN_PATH + ".create_discord_client")
     def test_action_send_test_message(
-        self, mock_create_channel_message, mock_message_user
+        self, mock_create_discord_client, mock_message_user
     ):
         # given
         config = create_relay_config(character=self.character)
@@ -76,18 +76,21 @@ class TestRelayConfigAdmin(TestCase):
         self.modeladmin.send_test_message(request, queryset)
         # then
         channel_ids = {
-            obj[1]["channel_id"] for obj in mock_create_channel_message.call_args_list
+            obj[1]["channel_id"]
+            for obj in mock_create_discord_client.return_value.create_channel_message.call_args_list
         }
         self.assertSetEqual(channel_ids, {config.discord_channel.pk})
         self.assertTrue(mock_message_user.called)
 
-    @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_PATH + ".DiscordClient.create_channel_message")
+    @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user", spec=True)
+    @patch(ADMIN_PATH + ".create_discord_client", spec=True)
     def test_action_send_test_message_with_error(
-        self, mock_create_channel_message, mock_message_user
+        self, mock_create_discord_client, mock_message_user
     ):
         # given
-        mock_create_channel_message.side_effect = DiscordProxyException
+        mock_create_discord_client.return_value.create_channel_message.side_effect = (
+            DiscordProxyException
+        )
         create_relay_config(character=self.character)
         request = create_fake_request(user=self.admin_user)
         queryset = RelayConfig.objects.all()

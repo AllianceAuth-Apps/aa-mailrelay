@@ -181,7 +181,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         self.assertSetEqual(mail_pks, {old_mail.pk, new_mail.pk})
 
 
-@patch(MODELS_PATH + ".DiscordClient.create_channel_message")
+@patch(MODELS_PATH + ".create_discord_client", spec=True)
 class TestRelayConfigSendMail(NoSocketsTestCase):
     @classmethod
     def setUpClass(cls):
@@ -191,25 +191,29 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         create_eve_entities_from_evecharacter(cls.character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
 
-    def test_should_send_valid_mail(self, mock_create_channel_message):
+    def test_should_send_valid_mail(self, mock_create_discord_client):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002)
         config = create_relay_config(character=self.character)
         # when
         config.send_mail(mail)
         # then
-        self.assertTrue(mock_create_channel_message.called)
+        self.assertTrue(
+            mock_create_discord_client.return_value.create_channel_message.called
+        )
 
-    def test_should_not_send_mail_without_body(self, mock_create_channel_message):
+    def test_should_not_send_mail_without_body(self, mock_create_discord_client):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002, body="")
         config = create_relay_config(character=self.character)
         # when
         config.send_mail(mail)
         # then
-        self.assertFalse(mock_create_channel_message.called)
+        self.assertFalse(
+            mock_create_discord_client.return_value.create_channel_message.called
+        )
 
-    def test_should_send_mail_with_everbody_ping(self, mock_create_channel_message):
+    def test_should_send_mail_with_everybody_ping(self, mock_create_discord_client):
         # given
         mail = create_character_mail(character=self.character, sender_id=1002)
         config = create_relay_config(
@@ -218,7 +222,10 @@ class TestRelayConfigSendMail(NoSocketsTestCase):
         # when
         config.send_mail(mail)
         # then
-        _, kwargs = mock_create_channel_message.call_args
+        (
+            _,
+            kwargs,
+        ) = mock_create_discord_client.return_value.create_channel_message.call_args
         self.assertIn("@everyone", kwargs["content"])
 
 
@@ -279,11 +286,13 @@ class TestRelayConfigOther(NoSocketsTestCase):
         self.assertIsNone(result)
 
 
-@patch(MANAGERS_PATH + ".DiscordClient.get_guild_channels", spec=True)
+@patch(MANAGERS_PATH + ".create_discord_client", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
-    def test_should_create_new_channels_and_categories(self, mock_get_channels):
+    def test_should_create_new_channels_and_categories(
+        self, mock_create_discord_client
+    ):
         # given
-        mock_get_channels.return_value = [
+        mock_create_discord_client.return_value.get_guild_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo", parent_id=3),
             create_discordproxy_channel(
@@ -302,9 +311,11 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         self.assertEqual(obj.name, "bravo")
         self.assertEqual(obj.category.name, "zulu")
 
-    def test_should_update_existing_channels_and_categores(self, mock_get_channels):
+    def test_should_update_existing_channels_and_categories(
+        self, mock_create_discord_client
+    ):
         # given
-        mock_get_channels.return_value = [
+        mock_create_discord_client.return_value.get_guild_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo", parent_id=3),
             create_discordproxy_channel(
@@ -325,9 +336,11 @@ class TestDiscordChannelManager(NoSocketsTestCase):
         obj = DiscordCategory.objects.get(id=3)
         self.assertEqual(obj.name, "zulu")
 
-    def test_should_remove_obsolete_channels_and_categories(self, mock_get_channels):
+    def test_should_remove_obsolete_channels_and_categories(
+        self, mock_create_discord_client
+    ):
         # given
-        mock_get_channels.return_value = [
+        mock_create_discord_client.return_value.get_guild_channels.return_value = [
             create_discordproxy_channel(id=1, name="alpha"),
             create_discordproxy_channel(id=2, name="bravo"),
         ]

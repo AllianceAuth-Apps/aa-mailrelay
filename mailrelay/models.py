@@ -1,9 +1,8 @@
 """Models for Mail Relay."""
 
 import datetime as dt
-from typing import List, Optional
+from typing import Optional
 
-from discordproxy.client import DiscordClient
 from discordproxy.discord_api_pb2 import Embed
 from memberaudit.models import Character, CharacterMail
 
@@ -19,6 +18,7 @@ from . import __title__
 from .app_settings import MAILRELAY_OLDEST_MAIL_HOURS, MAILRELAY_RELAY_GRACE_MINUTES
 from .core.xml_converter import eve_xml_to_discord_markup
 from .managers import DiscordChannelManager
+from .providers import create_discord_proxy_client
 from .utils import chunks_by_lines
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -122,7 +122,7 @@ class RelayConfig(models.Model):
 
         return new_mails_qs
 
-    def send_mail(self, mail: CharacterMail, timeout: Optional[int] = None) -> None:
+    def send_mail(self, mail: CharacterMail) -> None:
         """Send one mail to channel.
 
         Args:
@@ -135,7 +135,7 @@ class RelayConfig(models.Model):
         if not self.discord_channel:
             raise ValueError(f"No channel configured for config {self}")
 
-        client = DiscordClient(timeout=timeout)
+        client = create_discord_proxy_client()
         embeds = self._generate_embeds(mail)
         for num, embed in enumerate(embeds, start=1):
             content = self._content_with_mentions() if num == 1 else ""
@@ -159,7 +159,7 @@ class RelayConfig(models.Model):
             title = "Eve"
         return f"{mention}**New {title} Mail**"
 
-    def _generate_embeds(self, mail: CharacterMail) -> List[Embed]:
+    def _generate_embeds(self, mail: CharacterMail) -> list:
         recipients = ", ".join(
             [obj.name_plus for obj in mail.recipients.order_by("name")]
         )

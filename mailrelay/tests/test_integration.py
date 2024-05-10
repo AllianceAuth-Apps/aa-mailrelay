@@ -31,10 +31,10 @@ def dummy_task(*args, **kwargs):
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
-@patch(MODELS_PATH + ".DiscordClient", spec=True)
+@patch(MODELS_PATH + ".create_discord_client", spec=True)
 @patch(TASKS_PATH + ".update_character_mails", new=dummy_task)
 class TestForwardNewMails(NoSocketsTestCase):
-    def test_should_forward_mail_with_one_config(self, mock_DiscordClient):
+    def test_should_forward_mail_with_one_config(self, mock_create_discord_client):
         # given
         user_1001 = create_fake_user(1001, "Bruce Wayne")
         character_1001 = add_memberaudit_character_to_user(user_1001, 1001)
@@ -52,10 +52,12 @@ class TestForwardNewMails(NoSocketsTestCase):
 
         # then
         self.assertEqual(
-            mock_DiscordClient.return_value.create_channel_message.call_count, 1
+            mock_create_discord_client.return_value.create_channel_message.call_count, 1
         )
 
-    def test_should_forward_mail_with_multiple_configs(self, mock_DiscordClient):
+    def test_should_forward_mail_with_multiple_configs(
+        self, mock_create_discord_client
+    ):
         # given
         user_1001 = create_fake_user(1001, "Bruce Wayne")
         character_1001 = add_memberaudit_character_to_user(user_1001, 1001)
@@ -79,5 +81,5 @@ class TestForwardNewMails(NoSocketsTestCase):
             forward_new_mails.delay()
         # then
         self.assertEqual(
-            mock_DiscordClient.return_value.create_channel_message.call_count, 2
+            mock_create_discord_client.return_value.create_channel_message.call_count, 2
         )
