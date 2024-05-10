@@ -91,7 +91,8 @@ Note that all settings are optional and the app will use the documented default 
 
 Name|Description|Default
 --|--|--
-`MAILRELAY_DISCORDPROXY_TIMEOUT`|Timeout for asynchronous Discord requests in seconds.|`60`
-`MAILRELAY_DISCORD_USER_TIMEOUT`|Timeout for user facing Discord requests in seconds.|`30`
+`DISCORDPROXY_HOST`|Port used to communicate with Discord Proxy.|`localhost`
+`DISCORDPROXY_PORT`|Host used to communicate with Discord Proxy.|`50051`
+`MAILRELAY_DISCORDPROXY_TIMEOUT`|Timeout for sending request to DISCORDPROXY in seconds.|`30`
 `MAILRELAY_OLDEST_MAIL_HOURS`|Oldest mail to be forwarded in hours. Set to 0 to disable.|`2`
 `MAILRELAY_RELAY_GRACE_MINUTES`|Max time in minutes since last successful relay before service is reported as down.|`30`

@@ -16,7 +16,7 @@ from app_utils.logging import LoggerAddTag
 
 from . import __title__
 from .models import DiscordCategory, DiscordChannel, RelayConfig
-from .providers import create_discord_proxy_client
+from .providers import create_discordproxy_client
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -97,7 +97,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
     @admin.action(description="Send test message for selected configurations")
     def send_test_message(self, request, queryset):
         items_count = 0
-        client = create_discord_proxy_client()
+        client = create_discordproxy_client()
         for obj in queryset:
             try:
                 client.create_channel_message(

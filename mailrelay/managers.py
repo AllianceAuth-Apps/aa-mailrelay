@@ -5,7 +5,7 @@ from discordproxy.client import Channel
 from django.conf import settings
 from django.db import models
 
-from .providers import create_discord_proxy_client
+from .providers import create_discordproxy_client
 
 
 class DiscordChannelManager(models.Manager):
@@ -29,7 +29,7 @@ class DiscordChannelManager(models.Manager):
                 "Can not find Discord guild ID in settings. "
                 "Is the Discord service configured?"
             ) from None
-        client = create_discord_proxy_client()
+        client = create_discordproxy_client()
         channels = client.get_guild_channels(guild_id)
         # pylint: disable=no-member
         categories = {

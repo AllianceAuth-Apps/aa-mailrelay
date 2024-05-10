@@ -181,7 +181,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         self.assertSetEqual(mail_pks, {old_mail.pk, new_mail.pk})
 
 
-@patch(MODELS_PATH + ".create_discord_client", spec=True)
+@patch(MODELS_PATH + ".create_discordproxy_client", spec=True)
 class TestRelayConfigSendMail(NoSocketsTestCase):
     @classmethod
     def setUpClass(cls):
@@ -286,7 +286,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
         self.assertIsNone(result)
 
 
-@patch(MANAGERS_PATH + ".create_discord_client", spec=True)
+@patch(MANAGERS_PATH + ".create_discordproxy_client", spec=True)
 class TestDiscordChannelManager(NoSocketsTestCase):
     def test_should_create_new_channels_and_categories(
         self, mock_create_discord_client

@@ -64,7 +64,7 @@ class TestRelayConfigAdmin(TestCase):
         self.assertEqual(result, "Wayne Technologies Inc.<br>Wayne Enterprises")
 
     @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user")
-    @patch(ADMIN_PATH + ".create_discord_client")
+    @patch(ADMIN_PATH + ".create_discordproxy_client")
     def test_action_send_test_message(
         self, mock_create_discord_client, mock_message_user
     ):
@@ -83,7 +83,7 @@ class TestRelayConfigAdmin(TestCase):
         self.assertTrue(mock_message_user.called)
 
     @patch(ADMIN_PATH + ".RelayConfigAdmin.message_user", spec=True)
-    @patch(ADMIN_PATH + ".create_discord_client", spec=True)
+    @patch(ADMIN_PATH + ".create_discordproxy_client", spec=True)
     def test_action_send_test_message_with_error(
         self, mock_create_discord_client, mock_message_user
     ):

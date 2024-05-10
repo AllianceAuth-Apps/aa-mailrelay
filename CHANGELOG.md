@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [1.4.0] - 2024-05-10
+
+### Added
+
+- Ability to configure custom host & port for discordproxy via new settings: `DISCORDPROXY_HOST`, `DISCORDPROXY_PORT`
+
+### Changed
+
+- Consolidated timeout settings for user and tasks into one
+
 ## [1.3.0] - 2024-01-18
 
 ### Changed

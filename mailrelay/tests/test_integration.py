@@ -31,7 +31,7 @@ def dummy_task(*args, **kwargs):
 
 @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
 @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
-@patch(MODELS_PATH + ".create_discord_client", spec=True)
+@patch(MODELS_PATH + ".create_discordproxy_client", spec=True)
 @patch(TASKS_PATH + ".update_character_mails", new=dummy_task)
 class TestForwardNewMails(NoSocketsTestCase):
     def test_should_forward_mail_with_one_config(self, mock_create_discord_client):
