@@ -9,7 +9,6 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import MAILRELAY_DISCORD_TASK_TIMEOUT
 from .models import RelayConfig
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -59,7 +58,7 @@ def forward_mail_to_discord(config_pk, mail_pk):
     ).get(pk=config_pk)
     mail: CharacterMail = config.character.mails.get(pk=mail_pk)  # type: ignore
     try:
-        config.send_mail(mail=mail, timeout=MAILRELAY_DISCORD_TASK_TIMEOUT)
+        config.send_mail(mail=mail)
     except DiscordProxyException as ex:
         logger.error(
             "%s: Failed to send mail %s to channel %s due to error from Discord Proxy. "

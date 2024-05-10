@@ -29,7 +29,7 @@ dependencies = [
     "aa-memberaudit>=3.7.0",
     "allianceauth-app-utils>=1.19",
     "allianceauth>=3",
-    "discordproxy>=1",
+    "discordproxy>=1.3.2",
     "django-eveuniverse>=1",
 ]
 

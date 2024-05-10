@@ -1,9 +1,9 @@
 """Admin site for Mail Relay."""
+
 # pylint: disable=missing-class-docstring,missing-function-docstring
 
 from collections import defaultdict
 
-from discordproxy.client import DiscordClient
 from discordproxy.exceptions import DiscordProxyException
 
 from django.conf import settings
@@ -15,8 +15,8 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import MAILRELAY_DISCORD_USER_TIMEOUT
 from .models import DiscordCategory, DiscordChannel, RelayConfig
+from .providers import create_discordproxy_client
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
@@ -97,7 +97,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
     @admin.action(description="Send test message for selected configurations")
     def send_test_message(self, request, queryset):
         items_count = 0
-        client = DiscordClient()
+        client = create_discordproxy_client()
         for obj in queryset:
             try:
                 client.create_channel_message(
@@ -128,7 +128,7 @@ class RelayConfigAdmin(admin.ModelAdmin):
             mails_sent = 0
             for mail in new_mails_qs:
                 try:
-                    obj.send_mail(mail, timeout=MAILRELAY_DISCORD_USER_TIMEOUT)
+                    obj.send_mail(mail)
                 except DiscordProxyException as ex:
                     logger.error(
                         "%s: Failed to send test message for", obj, exc_info=True

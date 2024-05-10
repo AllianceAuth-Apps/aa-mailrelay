@@ -11,7 +11,6 @@ from allianceauth.services.hooks import get_extension_logger
 from app_utils.logging import LoggerAddTag
 
 from . import __title__
-from .app_settings import MAILRELAY_DISCORD_USER_TIMEOUT
 from .models import DiscordChannel
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
@@ -22,9 +21,7 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 def admin_update_discord_channels(request):
     """View to update the discord channels."""
     try:
-        channels_count = DiscordChannel.objects.sync(
-            timeout=MAILRELAY_DISCORD_USER_TIMEOUT
-        )
+        channels_count = DiscordChannel.objects.sync()
         messages.success(
             request, f"Successfully updated {channels_count} channels from Discord."
         )
