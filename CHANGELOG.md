@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [2.0.0] - 2025-11-15
+
+### Changed
+
+- BREAKING CHANGE: Support dropped for AA3
+- BREAKING CHANGE: Support dropped for Python 3.8 & 3.9
+- Added support for Python 3.12, & 3.13
+
 ## [1.4.0] - 2024-05-10
 
 ### Added

@@ -3,7 +3,7 @@
 import datetime as dt
 from typing import Optional
 
-from discordproxy.discord_api_pb2 import Embed
+from discordproxy.discord_api_pb2 import Embed  # pylint: disable=E0611
 from memberaudit.models import Character, CharacterMail
 
 from django.db import models
