@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - BREAKING CHANGE: Support dropped for AA3
-- Added support for Python 3.12
+- BREAKING CHANGE: Support dropped for Python 3.8 & 3.9
+- Added support for Python 3.12, & 3.13
 
 ## [1.4.0] - 2024-05-10
 
