@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [2.1.0] - 2026-05-29
+
+### Changed
+
+- Added support for Alliance Auth 5
+- Now requires Member Audit 5 or higher
+
 ## [2.0.0] - 2025-11-15
 
 ### Changed

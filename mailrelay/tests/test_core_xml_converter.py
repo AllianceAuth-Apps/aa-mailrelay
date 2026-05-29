@@ -1,4 +1,5 @@
 from django.test import TestCase
+from eveuniverse.tests.testdata.factories_2 import CitadelTypeFactory
 
 from mailrelay.core.xml_converter import eve_xml_to_discord_markup
 
@@ -37,6 +38,8 @@ class TestXmlToMarkup(TestCase):
         self.assertEqual(result, "[alpha](https://www.example.com)")
 
     def test_should_handle_other_links(self):
+        # given
+        CitadelTypeFactory(id=35825)
         # when
         result = eve_xml_to_discord_markup(
             '<a href="showinfo:35825//1033237775571">alpha</a>'

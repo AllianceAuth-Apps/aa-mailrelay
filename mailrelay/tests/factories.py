@@ -2,7 +2,6 @@ import datetime as dt
 
 from discordproxy.discord_api_pb2 import Channel
 from memberaudit.models import CharacterMail, MailEntity
-from pytz import utc
 
 from django.contrib.auth.models import User
 from eveuniverse.models import EveEntity
@@ -15,7 +14,7 @@ class FakeRequest(object):
         self.user = user
 
 
-def id_generator() -> int:
+def id_generator():
     seed = 1
     while True:
         yield seed
@@ -52,7 +51,7 @@ def create_eve_entities_from_evecharacter(character):
 
 def create_character_mail(sender_id, recipient_ids=None, **kwargs) -> CharacterMail:
     if "timestamp" not in kwargs:
-        kwargs["timestamp"] = dt.datetime(2021, 12, 24, 12, 15, tzinfo=utc)
+        kwargs["timestamp"] = dt.datetime(2021, 12, 24, 12, 15, tzinfo=dt.timezone.utc)
     if not recipient_ids:
         recipient_ids = []
     if "character" not in kwargs:

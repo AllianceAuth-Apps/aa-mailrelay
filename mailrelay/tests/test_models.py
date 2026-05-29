@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 from discordproxy.client import Channel
 from memberaudit.tests.utils import add_memberaudit_character_to_user
-from pytz import utc
+
+from django.core.cache import cache
 
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
@@ -31,6 +32,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         cls.character = add_memberaudit_character_to_user(user, 1001)
         create_eve_entities_from_evecharacter(cls.character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
+        cache.clear()
 
     @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_return_corporation_mails_only(self):
@@ -48,7 +50,9 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.new_mails_queryset()
 
         # then
@@ -71,7 +75,9 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.new_mails_queryset()
 
         # then
@@ -81,7 +87,15 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
     @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_not_return_alliance_mails(self):
         # given
-        user = create_fake_user(1003, "Clark Kent", 2009, "Wayne Food", "WYF")
+        user = create_fake_user(
+            character_id=1003,
+            character_name="Clark Kent",
+            corporation_id=2009,
+            corporation_name="Wayne Food",
+            corporation_ticker="WYF",
+            alliance_id=None,
+            alliance_name="",
+        )
         character = add_memberaudit_character_to_user(user, 1003)
         character.eve_character.alliance_id = None
         character.eve_character.alliance_name = ""
@@ -96,7 +110,9 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.new_mails_queryset()
 
         # then
@@ -119,7 +135,9 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.new_mails_queryset()
 
         # then
@@ -134,12 +152,12 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         new_mail = create_character_mail(
             character=self.character,
             sender_id=1002,
-            timestamp=dt.datetime(2021, 12, 24, 11, 30, tzinfo=utc),
+            timestamp=dt.datetime(2021, 12, 24, 11, 30, tzinfo=dt.timezone.utc),
         )
         create_character_mail(
             character=self.character,
             sender_id=1002,
-            timestamp=dt.datetime(2021, 12, 24, 11, 00, tzinfo=utc),
+            timestamp=dt.datetime(2021, 12, 24, 11, 00, tzinfo=dt.timezone.utc),
         )
         config = create_relay_config(
             character=self.character, mail_category=RelayConfig.MailCategory.ALL
@@ -147,7 +165,9 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 29, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 29, tzinfo=dt.timezone.utc
+            )
             result = config.new_mails_queryset()
 
         # then
@@ -160,12 +180,12 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         new_mail = create_character_mail(
             character=self.character,
             sender_id=1002,
-            timestamp=dt.datetime(2021, 12, 24, 11, 30, tzinfo=utc),
+            timestamp=dt.datetime(2021, 12, 24, 11, 30, tzinfo=dt.timezone.utc),
         )
         old_mail = create_character_mail(
             character=self.character,
             sender_id=1002,
-            timestamp=dt.datetime(2021, 12, 24, 11, 00, tzinfo=utc),
+            timestamp=dt.datetime(2021, 12, 24, 11, 00, tzinfo=dt.timezone.utc),
         )
         config = create_relay_config(
             character=self.character, mail_category=RelayConfig.MailCategory.ALL
@@ -173,7 +193,9 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 29, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 29, tzinfo=dt.timezone.utc
+            )
             result = config.new_mails_queryset()
 
         # then
@@ -238,7 +260,7 @@ class TestRelayConfigOther(NoSocketsTestCase):
 
     def test_should_record_service_run(self):
         config = create_relay_config(character=self.character)
-        my_now = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+        my_now = dt.datetime(2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc)
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
             mock_now.return_value = my_now
@@ -253,11 +275,15 @@ class TestRelayConfigOther(NoSocketsTestCase):
     def test_should_report_as_up(self):
         config = create_relay_config(
             character=self.character,
-            last_service_run_at=dt.datetime(2021, 12, 24, 12, 15, tzinfo=utc),
+            last_service_run_at=dt.datetime(
+                2021, 12, 24, 12, 15, tzinfo=dt.timezone.utc
+            ),
         )
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.is_service_up
         # then
         self.assertTrue(result)
@@ -266,11 +292,15 @@ class TestRelayConfigOther(NoSocketsTestCase):
     def test_should_report_as_down_1(self):
         config = create_relay_config(
             character=self.character,
-            last_service_run_at=dt.datetime(2021, 12, 24, 11, 55, tzinfo=utc),
+            last_service_run_at=dt.datetime(
+                2021, 12, 24, 11, 55, tzinfo=dt.timezone.utc
+            ),
         )
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.is_service_up
         # then
         self.assertFalse(result)
@@ -280,7 +310,9 @@ class TestRelayConfigOther(NoSocketsTestCase):
         config = create_relay_config(character=self.character, last_service_run_at=None)
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             result = config.is_service_up
         # then
         self.assertIsNone(result)

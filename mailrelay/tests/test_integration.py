@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from celery import shared_task
 from memberaudit.tests.utils import add_memberaudit_character_to_user
-from pytz import utc
 
 from django.test import override_settings
 
@@ -47,7 +46,9 @@ class TestForwardNewMails(NoSocketsTestCase):
 
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             forward_new_mails.delay()
 
         # then
@@ -77,7 +78,9 @@ class TestForwardNewMails(NoSocketsTestCase):
         )
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             forward_new_mails.delay()
         # then
         self.assertEqual(
