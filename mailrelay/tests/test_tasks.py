@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from discordproxy.exceptions import DiscordProxyTimeoutError, GrpcStatusCode
 from memberaudit.tests.utils import add_memberaudit_character_to_user
-from pytz import utc
 
 from django.test import override_settings
 
@@ -74,7 +73,9 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         config = create_relay_config(character=character)
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             forward_new_mails_for_config(config_pk=config.pk)
         # then
         config.refresh_from_db()
@@ -94,7 +95,9 @@ class TestForwardNewMailsOneConfig(NoSocketsTestCase):
         config.mails_sent.add(mail)
         # when
         with patch(MODELS_PATH + ".now") as mock_now:
-            mock_now.return_value = dt.datetime(2021, 12, 24, 12, 30, tzinfo=utc)
+            mock_now.return_value = dt.datetime(
+                2021, 12, 24, 12, 30, tzinfo=dt.timezone.utc
+            )
             forward_new_mails_for_config(config_pk=config.pk)
         # then
         config.refresh_from_db()
