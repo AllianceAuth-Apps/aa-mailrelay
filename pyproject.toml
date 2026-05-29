@@ -13,6 +13,7 @@ classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
     "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -25,12 +26,14 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "aa-memberaudit>=4",
-    "allianceauth-app-utils>=1.29",
-    "allianceauth>=4,<5",
+    "aa-memberaudit>=5",
+    "allianceauth-app-utils>=1.32.1",
+    "allianceauth>=4,<6",
     "discordproxy>=1.4",
-    "django-eveuniverse>=1.6",
+    "django-eveuniverse>=2",
 ]
+[project.optional-dependencies]
+test = ["coverage", "factory_boy", "django-webtest"]
 
 [project.urls]
 Homepage = "https://gitlab.com/ErikKalkoken/aa-mailrelay"
