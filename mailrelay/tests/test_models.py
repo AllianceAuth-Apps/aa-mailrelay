@@ -4,6 +4,8 @@ from unittest.mock import patch
 from discordproxy.client import Channel
 from memberaudit.tests.utils import add_memberaudit_character_to_user
 
+from django.core.cache import cache
+
 from app_utils.testing import NoSocketsTestCase, create_fake_user
 
 from mailrelay.models import DiscordCategory, DiscordChannel, RelayConfig
@@ -30,6 +32,7 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
         cls.character = add_memberaudit_character_to_user(user, 1001)
         create_eve_entities_from_evecharacter(cls.character.eve_character)
         create_eve_entity(id=1002, name="Peter Parker")
+        cache.clear()
 
     @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_return_corporation_mails_only(self):
@@ -84,7 +87,15 @@ class TestRelayConfigNewMailsQueryset(NoSocketsTestCase):
     @patch(MODELS_PATH + ".MAILRELAY_OLDEST_MAIL_HOURS", 2)
     def test_should_not_return_alliance_mails(self):
         # given
-        user = create_fake_user(1003, "Clark Kent", 2009, "Wayne Food", "WYF")
+        user = create_fake_user(
+            character_id=1003,
+            character_name="Clark Kent",
+            corporation_id=2009,
+            corporation_name="Wayne Food",
+            corporation_ticker="WYF",
+            alliance_id=None,
+            alliance_name="",
+        )
         character = add_memberaudit_character_to_user(user, 1003)
         character.eve_character.alliance_id = None
         character.eve_character.alliance_name = ""
