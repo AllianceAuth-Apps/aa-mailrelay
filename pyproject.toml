@@ -35,7 +35,7 @@ dependencies = [
 test = ["coverage", "factory_boy", "django-webtest"]
 
 [project.urls]
-Homepage = "https://gitlab.com/ErikKalkoken/aa-mailrelay"
+Homepage = "https://github.com/AllianceAuth-Apps/aa-mailrelay"
 
 [tool.flit.module]
 name = "mailrelay"
